@@ -1265,180 +1265,21 @@
     align-items: center;
   }
 
-  /* ── CASE PORTRAIT: framed-object composition ──
-     Frame architecture: outer drawn stroke (Oxblood) → bone matting → inner
-     Clay stroke → image surface with vignette + shimmer.
-     Effects: drawn-stroke reveal, breathing vignette, arrival shimmer.
-     Ambient: low-opacity Oxblood radial behind the section.
-     Reduced-motion: all kinetic effects disabled for users who set the pref. */
-
-  .case-portrait-frame {
-    position: relative;
-    padding: 14px;                  /* the bone "matting" */
-    background: var(--bone);
-    aspect-ratio: 4 / 5;
-    /* Reserve own stacking context so the drawn-stroke pseudos compose cleanly */
-    isolation: isolate;
-  }
-
-  /* Inner Clay hairline that hugs the image (physical frame edge) */
-  .case-portrait-frame::before {
-    content: '';
-    position: absolute;
-    inset: 10px;                    /* sits between matting and image */
-    border: 1px solid var(--clay);
-    opacity: 0.55;
-    pointer-events: none;
-    z-index: 2;
-  }
-
-  /* Outer drawn-stroke container holds the four animated edges */
-  .case-portrait-stroke {
-    position: absolute;
-    inset: 0;
-    pointer-events: none;
-    z-index: 3;
-  }
-  .case-portrait-stroke span {
-    position: absolute;
-    background: var(--oxblood);
-    opacity: 0.42;
-    transform-origin: center;
-    transition: transform 0.42s cubic-bezier(0.65, 0, 0.35, 1);
-    transform: scale(0);            /* hidden by default */
-  }
-  /* Top edge — animates first */
-  .case-portrait-stroke .e-top    { top: 0;    left: 0;  right: 0;  height: 1px; transform-origin: left center;  transition-delay: 0.05s; }
-  /* Right edge */
-  .case-portrait-stroke .e-right  { top: 0;    right: 0; bottom: 0; width: 1px;  transform-origin: center top;   transition-delay: 0.42s; }
-  /* Bottom edge */
-  .case-portrait-stroke .e-bot    { bottom: 0; left: 0;  right: 0;  height: 1px; transform-origin: right center; transition-delay: 0.78s; }
-  /* Left edge — closes the frame */
-  .case-portrait-stroke .e-left   { top: 0;    left: 0;  bottom: 0; width: 1px;  transform-origin: center bottom; transition-delay: 1.10s; }
-
-  /* When the section reveals, scale each edge from 0 to 1 */
-  .case-portrait-frame.visible .e-top   { transform: scaleX(1); }
-  .case-portrait-frame.visible .e-right { transform: scaleY(1); }
-  .case-portrait-frame.visible .e-bot   { transform: scaleX(1); }
-  .case-portrait-frame.visible .e-left  { transform: scaleY(1); }
-
-  /* Override the old standalone .case-portrait rule:
-     it now lives inside .case-portrait-frame and fills the matting hole. */
   .case-portrait {
-    width: 100%;
-    height: 100%;
-    aspect-ratio: auto;             /* parent frame owns the aspect ratio */
-    background-color: var(--ink);
+    background-color: var(--plum);
     background-size: cover;
     background-position: center;
-    border-radius: 0;               /* the frame, not the image, is the rounded edge */
+    border-radius: 3px;
+    aspect-ratio: 4/5;
     overflow: hidden;
     position: relative;
-    display: block;
-    padding: 0;
-    z-index: 1;
+    display: flex;
+    align-items: flex-end;
+    padding: 26px;
   }
 
-  /* Vignette layer — radial darkening, very low opacity, breathes slowly.
-     This is a *gradient* — deliberate rule break for material depth. */
-  .case-portrait::after {
-    content: '';
-    position: absolute;
-    inset: 0;
-    pointer-events: none;
-    background:
-      radial-gradient(ellipse at 30% 28%,
-        rgba(0,0,0,0) 0%,
-        rgba(0,0,0,0) 38%,
-        rgba(0,0,0,0.18) 78%,
-        rgba(0,0,0,0.32) 100%);
-    opacity: 1;
-    animation: portrait-breath 7s ease-in-out infinite;
-  }
-  @keyframes portrait-breath {
-    0%, 100% { opacity: 0.78; }
-    50%      { opacity: 1; }
-  }
-
-  /* Arrival shimmer: thin diagonal band crosses the image once on reveal */
-  .case-portrait-shimmer {
-    position: absolute;
-    inset: -10% -40%;               /* oversize so the band fully exits frame */
-    pointer-events: none;
-    z-index: 2;
-    overflow: hidden;
-    opacity: 0;
-  }
-  .case-portrait-shimmer::after {
-    content: '';
-    position: absolute;
-    top: 0;
-    bottom: 0;
-    width: 18%;
-    left: -25%;                     /* starts outside left edge */
-    background: linear-gradient(
-      100deg,
-      rgba(240,236,234,0) 0%,
-      rgba(240,236,234,0.12) 45%,
-      rgba(240,236,234,0.22) 50%,
-      rgba(240,236,234,0.12) 55%,
-      rgba(240,236,234,0) 100%
-    );
-    transform: skewX(-18deg);
-  }
-  .case-portrait-frame.visible .case-portrait-shimmer {
-    animation: portrait-shimmer 1.6s ease-out 1.4s 1 forwards;
-  }
-  @keyframes portrait-shimmer {
-    0%   { opacity: 0; }
-    8%   { opacity: 1; }
-    100% { opacity: 0; }
-  }
-  .case-portrait-frame.visible .case-portrait-shimmer::after {
-    animation: shimmer-sweep 1.6s ease-out 1.4s 1 forwards;
-  }
-  @keyframes shimmer-sweep {
-    0%   { left: -25%; }
-    100% { left: 125%; }
-  }
-
-  /* Section-level ambient warmth: low-opacity Oxblood radial behind the
-     proof-story. Drifts in opacity on a slow cycle, offset from the vignette.
-     This is technically a "glow" — deliberate rule break, kept extremely subtle. */
-  #proof-story {
-    position: relative;
-    overflow: hidden;
-  }
-  #proof-story::before {
-    content: '';
-    position: absolute;
-    width: 70%;
-    height: 80%;
-    left: -10%;
-    top: 10%;
-    background: radial-gradient(
-      ellipse at center,
-      rgba(103,22,16,0.06) 0%,
-      rgba(103,22,16,0.025) 35%,
-      transparent 70%);
-    pointer-events: none;
-    z-index: 0;
-    animation: section-warmth 9s ease-in-out infinite;
-  }
-  @keyframes section-warmth {
-    0%, 100% { opacity: 0.65; }
-    50%      { opacity: 1; }
-  }
-  #proof-story .container { position: relative; z-index: 1; }
-
-  /* Reduced motion: kill everything kinetic. The static composition still
-     reads beautifully — frame stroke is already drawn, vignette + ambient are
-     static at midpoint opacity, no shimmer. */
-  @media (prefers-reduced-motion: reduce) {
-    .case-portrait-stroke span        { transform: scale(1); transition: none; }
-    .case-portrait::after             { animation: none; opacity: 0.85; }
-    .case-portrait-shimmer            { display: none; }
-    #proof-story::before              { animation: none; opacity: 0.8; }
+  .case-portrait-label {
+    display: none;
   }
 
   #proof-story .eyebrow { margin-bottom: 12px; }
@@ -2449,15 +2290,8 @@
 <section id="proof-story">
   <div class="container">
     <div class="case-grid">
-      <div class="case-portrait-frame fade-up">
-        <div class="case-portrait" style="background-image: url('portraits/octavia-martinez-firm.png'); background-size: cover; background-position: center;"></div>
-        <div class="case-portrait-shimmer"></div>
-        <div class="case-portrait-stroke" aria-hidden="true">
-          <span class="e-top"></span>
-          <span class="e-right"></span>
-          <span class="e-bot"></span>
-          <span class="e-left"></span>
-        </div>
+      <div class="case-portrait fade-up" style="background-image: url('portraits/octavia-martinez-firm.png'); background-size: cover; background-position: center;">
+        <span class="case-portrait-label">Client portrait · environmental</span>
       </div>
       <div class="case-content fade-up">
         <span class="eyebrow">Civil litigation · Texas</span>
