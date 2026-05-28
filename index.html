@@ -1041,13 +1041,33 @@
     inset: 0;
     z-index: 3;
     background: rgba(39,15,26,0.92);
-    padding: 24px 24px;
+    padding: 28px 24px 24px;
     display: flex;
     flex-direction: column;
-    justify-content: center;
+    align-items: center;
+    justify-content: flex-start;
     opacity: 0;
     transition: opacity 0.25s ease;
     pointer-events: none;
+  }
+
+  .system-overlay-title {
+    font-family: var(--cd);
+    font-weight: 600;
+    font-size: clamp(24px, 2.4vw, 32px);
+    letter-spacing: -0.02em;
+    color: var(--bone);
+    text-align: center;
+    line-height: 1;
+    margin-bottom: 4px;
+    flex: 0 0 auto;
+  }
+
+  .system-overlay-body {
+    flex: 1 1 auto;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
   }
 
   .system-visual:hover .system-card-overlay {
@@ -1083,8 +1103,8 @@
       opacity: 0;
       pointer-events: none;
       background: rgba(39,15,26,0.92);
-      justify-content: center;
-      padding: 24px 24px;
+      justify-content: flex-start;
+      padding: 28px 24px 24px;
       transition: opacity 0.4s ease;
     }
     .system-card-label {
@@ -2153,8 +2173,11 @@
             <span class="system-card-name">Positioning</span>
           </div>
           <div class="system-card-overlay">
-            <h3>Sound like you. Not like everyone.</h3>
-            <p>A positioning playbook that defines what you do better, differently, and for whom — then writes it into every page, ad, and intake script.</p>
+            <span class="system-overlay-title">Positioning</span>
+            <div class="system-overlay-body">
+              <h3>Sound like you. Not like everyone.</h3>
+              <p>A positioning playbook that defines what you do better, differently, and for whom — then writes it into every page, ad, and intake script.</p>
+            </div>
           </div>
         </div>
       </div>
@@ -2169,8 +2192,11 @@
             <span class="system-card-name">Website</span>
           </div>
           <div class="system-card-overlay">
-            <h3>Made to convert. Not just to look good.</h3>
-            <p>Custom-built around your positioning. Every visitor tracked from ad click to phone call. You own the domain, the files, and the code.</p>
+            <span class="system-overlay-title">Website</span>
+            <div class="system-overlay-body">
+              <h3>Made to convert. Not just to look good.</h3>
+              <p>Custom-built around your positioning. Every visitor tracked from ad click to phone call. You own the domain, the files, and the code.</p>
+            </div>
           </div>
         </div>
       </div>
@@ -2185,8 +2211,11 @@
             <span class="system-card-name">Online Ads</span>
           </div>
           <div class="system-card-overlay">
-            <h3>Calls in. Every day.</h3>
-            <p>Every call, every click, every dollar — on one dashboard. Open it any time to see exactly who's calling and when. No reports. No guessing.</p>
+            <span class="system-overlay-title">Online Ads</span>
+            <div class="system-overlay-body">
+              <h3>Calls in. Every day.</h3>
+              <p>Every call, every click, every dollar — on one dashboard. Open it any time to see exactly who's calling and when. No reports. No guessing.</p>
+            </div>
           </div>
         </div>
       </div>
@@ -2201,8 +2230,11 @@
             <span class="system-card-name">Intake</span>
           </div>
           <div class="system-card-overlay">
-            <h3>Only the right calls reach you.</h3>
-            <p>Trained legal receptionists qualify every caller before a consult is booked. You stop paying yourself to talk to people who were never going to sign.</p>
+            <span class="system-overlay-title">Intake</span>
+            <div class="system-overlay-body">
+              <h3>Only the right calls reach you.</h3>
+              <p>Trained legal receptionists qualify every caller before a consult is booked. You stop paying yourself to talk to people who were never going to sign.</p>
+            </div>
           </div>
         </div>
       </div>
