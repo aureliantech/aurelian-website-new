@@ -1242,11 +1242,11 @@
     border-top: 1px solid rgba(103,22,16,0.07);
   }
 
-  /* One-time scroll-snap on the case study. Proximity (not mandatory) so it
-     only catches users who are already near the section, never grabs mid-scroll
-     elsewhere. JS removes .snap-active from <html> after first encounter. */
+  /* One-time scroll-snap on the case study. MANDATORY = hard stop: the section
+     must align at viewport top before the user can continue. JS removes
+     .snap-active from <html> after first encounter so it's truly one-time. */
   html.snap-active {
-    scroll-snap-type: y proximity;
+    scroll-snap-type: y mandatory;
   }
   html.snap-active #proof-story {
     scroll-snap-align: start;
@@ -2490,29 +2490,48 @@
   })();
 
   // One-time scroll-snap on the case study section (runs on all devices).
-  // Arm the snap on load. Disable only AFTER the user has scrolled into the
-  // section and settled there (not just had it brush the viewport).
+  // Arm snap on load. Hard-stop the section at the top of the viewport when
+  // user reaches it. Release the snap the moment the user attempts to scroll
+  // away (so they pass through after experiencing the hold).
   (function () {
     const proofSection = document.getElementById('proof-story');
     if (!proofSection) return;
     document.documentElement.classList.add('snap-active');
     let settled = false;
+    let released = false;
+
+    const release = () => {
+      if (released) return;
+      released = true;
+      document.documentElement.classList.remove('snap-active');
+    };
+
+    // Mark "settled" once the section is dominantly in view.
     const snapObs = new IntersectionObserver((entries) => {
       entries.forEach(entry => {
-        // Require the section to be dominantly in view (most of it visible)
-        // before counting it as "seen." Prevents instant-disable when the
-        // section is partially visible at page load.
         if (entry.intersectionRatio > 0.6 && !settled) {
           settled = true;
-          // Brief grace period so the user perceives the snap, then release.
-          setTimeout(() => {
-            document.documentElement.classList.remove('snap-active');
-            snapObs.disconnect();
-          }, 1400);
+          snapObs.disconnect();
         }
       });
     }, { threshold: [0, 0.3, 0.6, 0.8, 1.0] });
     snapObs.observe(proofSection);
+
+    // Release the snap on any user-initiated scroll attempt AFTER settling.
+    // Wheel, touch, and keyboard scroll keys all count.
+    const onIntent = () => { if (settled) release(); };
+    window.addEventListener('wheel',    onIntent, { passive: true });
+    window.addEventListener('touchmove', onIntent, { passive: true });
+    window.addEventListener('keydown',  (e) => {
+      // Arrow keys, page keys, space, end — anything that scrolls
+      if (settled && ['ArrowDown','ArrowUp','PageDown','PageUp','End','Home',' '].includes(e.key)) {
+        release();
+      }
+    });
+
+    // Safety net: if user is in the section for more than 4s without scrolling,
+    // release anyway so they're never trapped.
+    setTimeout(() => { if (settled) release(); }, 4000);
   })();
 </script>
 </body>
