@@ -1266,6 +1266,11 @@
     display: none;
   }
 
+  /* TEMPORARY: big case portrait hidden, grid collapsed to single column.
+     To restore: delete these two rules. */
+  .case-portrait { display: none; }
+  .case-grid { grid-template-columns: 1fr; }
+
   #proof-story .eyebrow { margin-bottom: 12px; }
 
   #proof-story h2 {
@@ -2274,12 +2279,12 @@
 <section id="proof-story">
   <div class="container">
     <div class="case-grid">
-      <div class="case-portrait fade-up" style="background-image: url('portraits/octavia-martinez-avatar.png'); background-size: cover; background-position: center top;">
+      <div class="case-portrait fade-up" style="background-image: url('portraits/octavia-martinez.png'); background-size: cover; background-position: center;">
         <span class="case-portrait-label">Client portrait · environmental</span>
       </div>
       <div class="case-content fade-up">
         <span class="eyebrow">Civil litigation · Texas</span>
-        <h2>119 new phone calls in 24 days, 38% under budget.</h2>
+        <h2>112 new phone calls in one month on a $1.2k budget.</h2>
         <blockquote>
           <p>"Everything has been amazing. The website is amazing. The system is amazing. And the help the team has provided to grow my firm is great. Highly recommended."</p>
         </blockquote>
@@ -2292,16 +2297,16 @@
         </div>
         <div class="case-stats">
           <div class="stat">
-            <span class="stat-num">119</span>
-            <span class="stat-label">New lead calls</span>
+            <span class="stat-num">112</span>
+            <span class="stat-label">New lead calls / mo.</span>
           </div>
           <div class="stat">
-            <span class="stat-num">24 days</span>
-            <span class="stat-label">Timeline</span>
+            <span class="stat-num">$1.2k</span>
+            <span class="stat-label">Ad spend</span>
           </div>
           <div class="stat">
-            <span class="stat-num">38%</span>
-            <span class="stat-label">Under planned budget</span>
+            <span class="stat-num">30 days</span>
+            <span class="stat-label">Total</span>
           </div>
         </div>
       </div>
