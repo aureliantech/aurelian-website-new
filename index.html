@@ -2372,59 +2372,52 @@
   })();
 
   // ── SYSTEM CARDS: scroll-triggered reveal + tap-to-toggle (touch only) ──
-  // Default = title only. A card flips to its text view only once it has
-  // scrolled well UP the screen (so the title is read first). Tapping a card
-  // toggles it and fully takes over — scroll stops affecting that card until
-  // it leaves the viewport, then automatic behavior resumes.
+  // Default = title only. A card flips to its text view once it scrolls up
+  // into a high band (so the title is read first). Tapping always wins and
+  // sets the card's state explicitly; scroll won't override a tapped card
+  // until it fully leaves the viewport, then auto behavior resumes.
   (function () {
     const isTouch = window.matchMedia('(hover: none)').matches
                     || ('ontouchstart' in window);
     if (!isTouch) return;
-    const cards = document.querySelectorAll('.system-visual');
+    const cards = Array.from(document.querySelectorAll('.system-visual'));
     if (!cards.length) return;
 
-    const locked = new WeakSet();  // cards the user has manually tapped
+    // Per-card state: 'auto' (scroll-driven) or 'user' (tap-driven, sticky)
+    const setRevealed = (card, on) => card.classList.toggle('is-revealed', on);
 
     const obs = new IntersectionObserver((entries) => {
       entries.forEach(entry => {
         const card = entry.target;
-        if (locked.has(card)) {
-          // User is in control of this card. Only release the lock once the
-          // card has fully scrolled out of view, then resume auto behavior.
-          if (!entry.isIntersecting) {
-            locked.delete(card);
-            card.classList.remove('is-revealed');
+        if (card.dataset.mode === 'user') {
+          // User controls this card. Release back to auto only once it has
+          // fully left the viewport.
+          if (!entry.isIntersecting && entry.intersectionRatio === 0) {
+            card.dataset.mode = 'auto';
+            setRevealed(card, false);
           }
-          return;
+          return; // never override a user-tapped card while it's on screen
         }
-        if (entry.isIntersecting) {
-          card.classList.add('is-revealed');
-        } else {
-          card.classList.remove('is-revealed');
-        }
+        // Auto mode: reveal when in the high band, hide when out.
+        setRevealed(card, entry.isIntersecting);
       });
     }, {
-      // Thin band high in the viewport: the card's top must cross ~25% down
-      // before it reveals -> happens late, after the title is clearly seen.
       rootMargin: '-25% 0px -68% 0px',
       threshold: 0
     });
-    cards.forEach(c => obs.observe(c));
+    cards.forEach(c => { c.dataset.mode = 'auto'; obs.observe(c); });
 
-    // Tap to toggle. Distinguish a real tap from a scroll-drag by tracking
-    // pointer movement: only toggle if the pointer barely moved.
+    // Tap to toggle. Track movement so a scroll-drag doesn't count as a tap.
     cards.forEach(card => {
       let sx = 0, sy = 0, moved = false;
-      card.addEventListener('pointerdown', (e) => {
-        sx = e.clientX; sy = e.clientY; moved = false;
-      });
+      card.addEventListener('pointerdown', (e) => { sx = e.clientX; sy = e.clientY; moved = false; });
       card.addEventListener('pointermove', (e) => {
-        if (Math.abs(e.clientX - sx) > 10 || Math.abs(e.clientY - sy) > 10) moved = true;
+        if (Math.abs(e.clientX - sx) > 12 || Math.abs(e.clientY - sy) > 12) moved = true;
       });
-      card.addEventListener('pointerup', (e) => {
-        if (moved) return;                       // it was a scroll, not a tap
-        locked.add(card);                        // user takes control
-        card.classList.toggle('is-revealed');    // flip current state
+      card.addEventListener('pointerup', () => {
+        if (moved) return;
+        card.dataset.mode = 'user';                       // tap takes control
+        setRevealed(card, !card.classList.contains('is-revealed')); // flip
       });
     });
   })();
