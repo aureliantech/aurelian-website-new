@@ -1109,16 +1109,20 @@
     }
     /* Keep title and body as one centered group instead of title-top / body-middle */
     .system-overlay-title {
-      margin-bottom: 18px;
-      color: var(--clay);
+      margin-bottom: 10px;
     }
     .system-overlay-body {
       flex: 0 0 auto;
       justify-content: flex-start;
     }
-    /* On touch, the default card is the bare background image — no label at all.
-       The tier title ("01 / Positioning") only appears in the revealed overlay. */
-    .system-card-label { display: none; }
+    .system-card-label {
+      opacity: 1;
+      transform: none;
+      transition: opacity 0.4s ease, transform 0.4s ease;
+    }
+    /* On touch, drop the tiny tier number ("01") — it's illegible and adds nothing.
+       Keep the name as the card's default-state title. */
+    .system-card-num { display: none; }
     /* REVEALED state (added by scroll): show the full text, fade the title — same as click/hover */
     .system-visual.is-revealed .system-card-overlay {
       opacity: 1;
