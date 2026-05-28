@@ -1344,41 +1344,6 @@
     50%      { opacity: 1; }
   }
 
-  /* Oxblood halo behind the frame — medium intensity focal glow.
-     Breathes on a 5.5s cycle (different from vignette 7s, section warmth 9s)
-     so the three motions never align, creating an organic "alive" texture.
-     This is a glow + radial gradient — both on the forbidden list. Deliberate
-     rule break: medium intensity, scoped tightly to the portrait, used as the
-     section's focal point of warmth. */
-  .case-portrait-frame::after {
-    content: '';
-    position: absolute;
-    /* Halo extends well past the frame edges to read as radiating light */
-    inset: -22%;
-    z-index: -1;                    /* behind the frame's bone matting */
-    pointer-events: none;
-    background: radial-gradient(
-      ellipse at center,
-      rgba(103,22,16,0.42) 0%,
-      rgba(103,22,16,0.26) 22%,
-      rgba(103,22,16,0.12) 45%,
-      rgba(103,22,16,0.04) 70%,
-      transparent 88%);
-    /* Filter blur softens the gradient edges into a true halo, not a hard ellipse */
-    filter: blur(28px);
-    opacity: 0;
-    transition: opacity 1.2s ease-out;
-  }
-  /* Halo fades in once the frame enters view, then breathes */
-  .case-portrait-frame.visible::after {
-    opacity: 1;
-    animation: portrait-halo 5.5s ease-in-out 1.2s infinite;
-  }
-  @keyframes portrait-halo {
-    0%, 100% { opacity: 0.78; }
-    50%      { opacity: 1; }
-  }
-
   /* Halo container override: allow it to extend past frame bounds */
   .case-portrait-frame { isolation: auto; overflow: visible; }
 
@@ -1417,7 +1382,7 @@
   @media (prefers-reduced-motion: reduce) {
     .case-portrait-stroke span        { transform: scale(1); transition: none; }
     .case-portrait::after             { animation: none; opacity: 0.85; }
-    .case-portrait-frame.visible::after { animation: none; opacity: 0.85; }
+    .case-portrait-frame.visible      { animation: none; }
     #proof-story::before              { animation: none; opacity: 0.8; }
   }
 
@@ -2635,53 +2600,55 @@
   })();
 
   // One-time scroll-pause on the case study section.
-  // When the section is approaching the top of the viewport from above (user is
-  // scrolling down through the page), briefly block further scroll for ~600ms
-  // so the section catches the eye. Fires once per page load. Honors reduced-motion.
+  // Intercepts wheel/touchmove events (which fire BEFORE the scroll commits)
+  // when the section's top edge is near the top of the viewport. On the first
+  // qualifying event, preventDefault to block the scroll for ~600ms so the
+  // section catches the eye. Then unbind so the page scrolls normally forever.
+  // Honors reduced-motion.
   (function () {
     const proofSection = document.getElementById('proof-story');
     if (!proofSection) return;
     if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
 
-    let fired = false;
     const PAUSE_MS = 600;        // total block duration
-    const TRIGGER_TOP_PX = 80;   // section top must be within this many px of viewport top
+    const TRIGGER_BAND = 240;    // section top must be within this many px of viewport top
+    let fired = false;
     let blockedUntil = 0;
 
-    // Block scrolling by preventing default on wheel/touchmove during the pause window
-    const block = (e) => {
-      if (performance.now() < blockedUntil) e.preventDefault();
-    };
-    // Use passive:false so preventDefault works
-    const opts = { passive: false, capture: true };
-
-    const trigger = () => {
-      if (fired) return;
-      fired = true;
-      blockedUntil = performance.now() + PAUSE_MS;
-      window.addEventListener('wheel', block, opts);
-      window.addEventListener('touchmove', block, opts);
-      // After the pause, remove listeners — section never blocks again
-      setTimeout(() => {
-        window.removeEventListener('wheel', block, opts);
-        window.removeEventListener('touchmove', block, opts);
-      }, PAUSE_MS + 50);
-    };
-
-    // Watch for the section's top edge reaching near the top of the viewport.
-    // Only fire when user is scrolling DOWN (i.e. they reached it intentionally
-    // from above), not when the page loads with it already in view.
-    let lastY = window.scrollY;
-    let userHasScrolled = false;
-    window.addEventListener('scroll', () => {
-      const y = window.scrollY;
-      if (y > lastY + 4) userHasScrolled = true;   // direction: down
-      lastY = y;
-      if (!userHasScrolled || fired) return;
+    // Capturing listener fires before the browser commits the scroll.
+    // passive: false is required to call preventDefault.
+    const onIntent = (e) => {
+      const now = performance.now();
+      // If we're already in the pause window, swallow the event
+      if (now < blockedUntil) {
+        e.preventDefault();
+        return;
+      }
+      if (fired) {
+        // Past the pause window AND already fired: do nothing, let it pass
+        return;
+      }
+      // Check if section is approaching the top of the viewport.
+      // top > 0 = section is below viewport top edge; top < TRIGGER_BAND = it's close
       const top = proofSection.getBoundingClientRect().top;
-      // Fire when the section's top edge is just about to hit the viewport top
-      if (top >= 0 && top <= TRIGGER_TOP_PX) trigger();
-    }, { passive: true });
+      if (top > 0 && top < TRIGGER_BAND) {
+        // Only block DOWNWARD scrolls (deltaY > 0 for wheel; we treat any touchmove as user attention)
+        const isDownward = !('deltaY' in e) || e.deltaY > 0;
+        if (!isDownward) return;
+        fired = true;
+        blockedUntil = now + PAUSE_MS;
+        e.preventDefault();
+        // After the pause, unbind both listeners — never blocks again
+        setTimeout(() => {
+          window.removeEventListener('wheel', onIntent, opts);
+          window.removeEventListener('touchmove', onIntent, opts);
+        }, PAUSE_MS + 80);
+      }
+    };
+
+    const opts = { passive: false, capture: true };
+    window.addEventListener('wheel', onIntent, opts);
+    window.addEventListener('touchmove', onIntent, opts);
   })();
 </script>
 </body>
