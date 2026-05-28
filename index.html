@@ -1242,6 +1242,22 @@
     border-top: 1px solid rgba(103,22,16,0.07);
   }
 
+  /* One-time scroll-snap on the case study. Proximity (not mandatory) so it
+     only catches users who are already near the section, never grabs mid-scroll
+     elsewhere. JS removes .snap-active from <html> after first encounter. */
+  html.snap-active {
+    scroll-snap-type: y proximity;
+  }
+  html.snap-active #proof-story {
+    scroll-snap-align: start;
+    scroll-snap-stop: always;
+  }
+  /* Respect users who prefer reduced motion — no snap at all for them. */
+  @media (prefers-reduced-motion: reduce) {
+    html.snap-active { scroll-snap-type: none; }
+    html.snap-active #proof-story { scroll-snap-align: none; }
+  }
+
   .case-grid {
     display: grid;
     grid-template-columns: 1fr 1.15fr;
@@ -2281,7 +2297,7 @@
         <span class="eyebrow">Civil litigation · Texas</span>
         <h2>119 new phone calls in 24 days, 38% under budget.</h2>
         <blockquote>
-          <p><strong style="color: var(--ember);">"Everything has been amazing.</strong> Josh has single-handedly helped reshape our entire business operations by organizing these systems that directly affect our pipeline… <strong style="color: var(--ember);">Highly recommended."</strong></p>
+          <p><strong style="color: var(--ember);">"Everything has been amazing.</strong> Josh has single-handedly helped reshape our entire business operations by organizing all these systems that directly affect our pipeline… <strong style="color: var(--ember);">Highly recommended."</strong></p>
         </blockquote>
         <div class="attribution">
           <div class="attr-avatar" style="background-image: url('portraits/octavia-martinez-avatar.png'); background-size: cover; background-position: center;"></div>
@@ -2471,6 +2487,32 @@
         setRevealed(card, !card.classList.contains('is-revealed')); // flip
       });
     });
+  })();
+
+  // One-time scroll-snap on the case study section (runs on all devices).
+  // Arm the snap on load. Disable only AFTER the user has scrolled into the
+  // section and settled there (not just had it brush the viewport).
+  (function () {
+    const proofSection = document.getElementById('proof-story');
+    if (!proofSection) return;
+    document.documentElement.classList.add('snap-active');
+    let settled = false;
+    const snapObs = new IntersectionObserver((entries) => {
+      entries.forEach(entry => {
+        // Require the section to be dominantly in view (most of it visible)
+        // before counting it as "seen." Prevents instant-disable when the
+        // section is partially visible at page load.
+        if (entry.intersectionRatio > 0.6 && !settled) {
+          settled = true;
+          // Brief grace period so the user perceives the snap, then release.
+          setTimeout(() => {
+            document.documentElement.classList.remove('snap-active');
+            snapObs.disconnect();
+          }, 1400);
+        }
+      });
+    }, { threshold: [0, 0.3, 0.6, 0.8, 1.0] });
+    snapObs.observe(proofSection);
   })();
 </script>
 </body>
