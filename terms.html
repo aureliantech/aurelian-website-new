@@ -1,0 +1,250 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Terms of Service — Aurelian™</title>
+<meta name="description" content="Terms of Service for Aurelian™.">
+<meta name="robots" content="index, follow">
+<link rel="canonical" href="https://aurelian-website-new.vercel.app/terms.html">
+<link rel="icon" href="assets/favicon.ico" sizes="any">
+<link rel="icon" type="image/png" sizes="192x192" href="assets/favicon-192.png">
+<link rel="apple-touch-icon" sizes="180x180" href="assets/apple-touch-icon.png">
+<meta name="theme-color" content="#671610">
+
+<style>
+  @font-face {
+    font-family: 'General Sans';
+    src: url('GeneralSans-Variable.woff2') format('woff2');
+    font-weight: 100 900;
+    font-style: normal;
+    font-display: swap;
+  }
+  @font-face {
+    font-family: 'General Sans';
+    src: url('GeneralSans-VariableItalic.woff2') format('woff2');
+    font-weight: 100 900;
+    font-style: italic;
+    font-display: swap;
+  }
+  @font-face {
+    font-family: 'Clash Display';
+    src: url('assets/ClashDisplay-Variable.woff2') format('woff2-variations'),
+         url('assets/ClashDisplay-Variable.woff2') format('woff2');
+    font-weight: 200 700;
+    font-style: normal;
+    font-display: swap;
+  }
+
+  :root {
+    --oxblood: #671610;
+    --ink:     #270F1A;
+    --bone:    #F0ECEA;
+    --ember:   #B2291C;
+    --clay:    #AB9789;
+    --gs: 'General Sans', system-ui, sans-serif;
+    --cd: 'Clash Display', system-ui, sans-serif;
+  }
+
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  html { scroll-behavior: smooth; }
+  body {
+    font-family: var(--gs);
+    background: var(--bone);
+    color: var(--ink);
+    line-height: 1.6;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  nav {
+    position: sticky;
+    top: 0;
+    z-index: 100;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 22px 80px;
+    background: var(--bone);
+    border-bottom: 1px solid rgba(39,15,26,0.08);
+  }
+  .nav-logo {
+    font-family: var(--cd);
+    font-weight: 600;
+    font-size: 20px;
+    letter-spacing: -0.015em;
+    color: var(--oxblood);
+    text-decoration: none;
+  }
+  .nav-logo sup { font-size: 9px; font-weight: 500; letter-spacing: 0.06em; vertical-align: super; opacity: 0.65; }
+  .nav-back {
+    font-family: var(--cd);
+    font-size: 14px;
+    font-weight: 500;
+    color: var(--ink);
+    text-decoration: none;
+    transition: color 0.18s;
+  }
+  .nav-back:hover { color: var(--oxblood); }
+
+  .legal-wrap {
+    max-width: 760px;
+    margin: 0 auto;
+    padding: 80px 32px 120px;
+  }
+  .legal-eyebrow {
+    font-family: var(--cd);
+    font-size: 13px;
+    font-weight: 500;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--oxblood);
+    margin-bottom: 16px;
+    display: block;
+  }
+  .legal-wrap h1 {
+    font-family: var(--cd);
+    font-weight: 600;
+    font-size: clamp(40px, 6vw, 64px);
+    line-height: 1.05;
+    letter-spacing: -0.03em;
+    color: var(--ink);
+    margin-bottom: 16px;
+  }
+  .legal-updated {
+    font-size: 15px;
+    color: rgba(39,15,26,0.55);
+    font-style: italic;
+    margin-bottom: 48px;
+  }
+  .legal-wrap h2 {
+    font-family: var(--cd);
+    font-weight: 600;
+    font-size: 24px;
+    letter-spacing: -0.01em;
+    color: var(--ink);
+    margin: 44px 0 16px;
+  }
+  .legal-wrap p {
+    font-size: 17px;
+    color: rgba(39,15,26,0.85);
+    margin-bottom: 18px;
+  }
+  .legal-wrap p.lead { font-size: 19px; color: var(--ink); }
+  .legal-wrap strong { font-weight: 600; color: var(--ink); }
+  .legal-wrap a {
+    color: var(--oxblood);
+    text-decoration: underline;
+    text-underline-offset: 2px;
+    transition: color 0.18s;
+  }
+  .legal-wrap a:hover { color: var(--ember); }
+  .legal-callout {
+    background: rgba(103,22,16,0.05);
+    border-left: 3px solid var(--oxblood);
+    padding: 18px 24px;
+    border-radius: 0 4px 4px 0;
+    margin: 24px 0;
+  }
+  .legal-callout p { margin: 0; font-weight: 500; color: var(--ink); font-size: 15px; }
+
+  .legal-footer {
+    background: var(--ink);
+    padding: 40px 32px;
+    text-align: center;
+  }
+  .legal-footer-inner {
+    max-width: 760px;
+    margin: 0 auto;
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+    align-items: center;
+  }
+  .legal-footer a, .legal-footer span {
+    font-family: var(--gs);
+    font-size: 13px;
+    color: rgba(240,236,234,0.5);
+    text-decoration: none;
+    letter-spacing: 0.02em;
+    transition: color 0.18s;
+  }
+  .legal-footer a:hover { color: var(--bone); }
+  .legal-footer-links { display: flex; flex-wrap: wrap; gap: 8px; justify-content: center; align-items: center; }
+  .legal-footer-sep { color: rgba(240,236,234,0.3); }
+
+  @media (max-width: 700px) {
+    nav { padding: 18px 24px; }
+    .legal-wrap { padding: 56px 24px 88px; }
+  }
+</style>
+</head>
+<body>
+
+<nav>
+  <a href="/" class="nav-logo">Aurelian<sup>™</sup></a>
+  <a href="/" class="nav-back">← Back to site</a>
+</nav>
+
+<main class="legal-wrap">
+  <span class="legal-eyebrow">Legal</span>
+  <h1>Terms of Service</h1>
+  <p class="legal-updated">Last updated: May 28, 2026</p>
+
+  <p class="lead">These Terms of Service ("Terms") govern your access to and use of the website aureliantech.co (the "Site") operated by Aurelian™ ("we," "us," or "our"). By accessing or using the Site, you agree to be bound by these Terms. If you do not agree, please do not use the Site.</p>
+
+  <h2>Use of the Site</h2>
+  <p>The Site is provided for general informational purposes and to allow you to learn about and request our services. You agree to use the Site only for lawful purposes and in a manner that does not infringe the rights of, or restrict or inhibit the use and enjoyment of the Site by, any third party.</p>
+
+  <h2>No Professional or Legal Advice</h2>
+  <p>Aurelian provides marketing and client-generation services. We are not a law firm, and nothing on this Site constitutes legal advice or creates an attorney-client relationship. Content on this Site is provided for informational purposes only and should not be relied upon as a substitute for advice from a qualified professional.</p>
+
+  <h2>Services &amp; Engagements</h2>
+  <p>Any services we provide are governed by a separate written agreement entered into between Aurelian and the client. These Terms govern your use of the Site only and do not by themselves create any obligation for us to provide services. In the event of any conflict between these Terms and a signed services agreement, the signed services agreement controls with respect to that engagement.</p>
+
+  <h2>Results &amp; Performance Statements</h2>
+  <p>Any results, case studies, testimonials, or performance figures described on the Site reflect specific situations and are not a guarantee, promise, or representation that you or any other client will achieve the same or similar results. Outcomes depend on many factors outside our control, including your market, practice area, budget, and level of participation. Any guarantee we offer is defined solely by the terms of a signed services agreement.</p>
+
+  <h2>Intellectual Property</h2>
+  <p>All content on the Site — including text, graphics, logos, the Aurelian™ name and mark, design, and layout — is owned by or licensed to us and is protected by intellectual property laws. You may not copy, reproduce, distribute, or create derivative works from any content on the Site without our prior written permission.</p>
+
+  <h2>Third-Party Links &amp; Tools</h2>
+  <p>The Site may contain links to third-party websites and may embed third-party tools (such as a scheduling service). We do not control and are not responsible for the content, policies, or practices of any third-party site or service. Your use of those services is governed by their own terms and privacy policies.</p>
+
+  <h2>Disclaimer of Warranties</h2>
+  <p>The Site is provided on an "as is" and "as available" basis without warranties of any kind, whether express or implied, including but not limited to implied warranties of merchantability, fitness for a particular purpose, and non-infringement. We do not warrant that the Site will be uninterrupted, error-free, or free of harmful components.</p>
+
+  <h2>Limitation of Liability</h2>
+  <p>To the fullest extent permitted by law, Aurelian and its founder shall not be liable for any indirect, incidental, special, consequential, or punitive damages, or any loss of profits or revenues, arising out of or related to your use of the Site, whether based on warranty, contract, tort, or any other legal theory.</p>
+
+  <h2>Indemnification</h2>
+  <p>You agree to indemnify and hold harmless Aurelian and its founder from any claims, damages, liabilities, costs, or expenses arising out of your use of the Site or your violation of these Terms.</p>
+
+  <h2>Governing Law</h2>
+  <p>These Terms are governed by the laws of the United States and the state in which Aurelian is established, without regard to conflict-of-law principles. Any disputes arising under these Terms shall be subject to the exclusive jurisdiction of the courts located there.</p>
+
+  <h2>Changes to These Terms</h2>
+  <p>We may update these Terms from time to time. Any changes will be posted on this page with an updated date. Continued use of the Site after changes constitutes acceptance of the revised Terms.</p>
+
+  <h2>Contact</h2>
+  <p>If you have questions about these Terms, reach us at <a href="mailto:josh@aureliantech.co">josh@aureliantech.co</a> or via <a href="https://www.linkedin.com/in/josh-pritchett" target="_blank" rel="noopener">LinkedIn</a>.</p>
+</main>
+
+<footer class="legal-footer">
+  <div class="legal-footer-inner">
+    <div class="legal-footer-links">
+      <a href="mailto:josh@aureliantech.co">josh@aureliantech.co</a>
+      <span class="legal-footer-sep">·</span>
+      <span>© 2026 Aurelian™</span>
+      <span class="legal-footer-sep">·</span>
+      <a href="privacy.html">Privacy</a>
+      <span class="legal-footer-sep">·</span>
+      <a href="terms.html">Terms</a>
+      <span class="legal-footer-sep">·</span>
+      <a href="https://www.linkedin.com/company/aureliantech/" target="_blank" rel="noopener">LinkedIn</a>
+    </div>
+    <span>Attorney Advertising. Past results do not guarantee future outcomes.</span>
+  </div>
+</footer>
+
+</body>
+</html>

@@ -1,0 +1,21 @@
+{
+  "name": "Aurelian",
+  "short_name": "Aurelian",
+  "description": "A done-for-you marketing and client-generation system for law firms.",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#270F1A",
+  "theme_color": "#671610",
+  "icons": [
+    {
+      "src": "/assets/favicon-192.png",
+      "sizes": "192x192",
+      "type": "image/png"
+    },
+    {
+      "src": "/assets/favicon-512.png",
+      "sizes": "512x512",
+      "type": "image/png"
+    }
+  ]
+}

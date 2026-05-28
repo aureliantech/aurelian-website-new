@@ -1,0 +1,4 @@
+User-agent: *
+Allow: /
+
+Sitemap: https://aurelian-website-new.vercel.app/sitemap.xml

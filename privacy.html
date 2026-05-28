@@ -1,0 +1,256 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Privacy Policy — Aurelian™</title>
+<meta name="description" content="Privacy Policy for Aurelian™.">
+<meta name="robots" content="index, follow">
+<link rel="canonical" href="https://aurelian-website-new.vercel.app/privacy.html">
+<link rel="icon" href="assets/favicon.ico" sizes="any">
+<link rel="icon" type="image/png" sizes="192x192" href="assets/favicon-192.png">
+<link rel="apple-touch-icon" sizes="180x180" href="assets/apple-touch-icon.png">
+<meta name="theme-color" content="#671610">
+
+<style>
+  @font-face {
+    font-family: 'General Sans';
+    src: url('GeneralSans-Variable.woff2') format('woff2');
+    font-weight: 100 900;
+    font-style: normal;
+    font-display: swap;
+  }
+  @font-face {
+    font-family: 'General Sans';
+    src: url('GeneralSans-VariableItalic.woff2') format('woff2');
+    font-weight: 100 900;
+    font-style: italic;
+    font-display: swap;
+  }
+  @font-face {
+    font-family: 'Clash Display';
+    src: url('assets/ClashDisplay-Variable.woff2') format('woff2-variations'),
+         url('assets/ClashDisplay-Variable.woff2') format('woff2');
+    font-weight: 200 700;
+    font-style: normal;
+    font-display: swap;
+  }
+
+  :root {
+    --oxblood: #671610;
+    --ink:     #270F1A;
+    --bone:    #F0ECEA;
+    --ember:   #B2291C;
+    --clay:    #AB9789;
+    --gs: 'General Sans', system-ui, sans-serif;
+    --cd: 'Clash Display', system-ui, sans-serif;
+  }
+
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  html { scroll-behavior: smooth; }
+  body {
+    font-family: var(--gs);
+    background: var(--bone);
+    color: var(--ink);
+    line-height: 1.6;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  /* ── NAV ── */
+  nav {
+    position: sticky;
+    top: 0;
+    z-index: 100;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 22px 80px;
+    background: var(--bone);
+    border-bottom: 1px solid rgba(39,15,26,0.08);
+  }
+  .nav-logo {
+    font-family: var(--cd);
+    font-weight: 600;
+    font-size: 20px;
+    letter-spacing: -0.015em;
+    color: var(--oxblood);
+    text-decoration: none;
+  }
+  .nav-logo sup { font-size: 9px; font-weight: 500; letter-spacing: 0.06em; vertical-align: super; opacity: 0.65; }
+  .nav-back {
+    font-family: var(--cd);
+    font-size: 14px;
+    font-weight: 500;
+    color: var(--ink);
+    text-decoration: none;
+    transition: color 0.18s;
+  }
+  .nav-back:hover { color: var(--oxblood); }
+
+  /* ── DOC ── */
+  .legal-wrap {
+    max-width: 760px;
+    margin: 0 auto;
+    padding: 80px 32px 120px;
+  }
+  .legal-eyebrow {
+    font-family: var(--cd);
+    font-size: 13px;
+    font-weight: 500;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--oxblood);
+    margin-bottom: 16px;
+    display: block;
+  }
+  .legal-wrap h1 {
+    font-family: var(--cd);
+    font-weight: 600;
+    font-size: clamp(40px, 6vw, 64px);
+    line-height: 1.05;
+    letter-spacing: -0.03em;
+    color: var(--ink);
+    margin-bottom: 16px;
+  }
+  .legal-updated {
+    font-size: 15px;
+    color: rgba(39,15,26,0.55);
+    font-style: italic;
+    margin-bottom: 48px;
+  }
+  .legal-wrap h2 {
+    font-family: var(--cd);
+    font-weight: 600;
+    font-size: 24px;
+    letter-spacing: -0.01em;
+    color: var(--ink);
+    margin: 44px 0 16px;
+  }
+  .legal-wrap p {
+    font-size: 17px;
+    color: rgba(39,15,26,0.85);
+    margin-bottom: 18px;
+  }
+  .legal-wrap p.lead {
+    font-size: 19px;
+    color: var(--ink);
+  }
+  .legal-wrap strong { font-weight: 600; color: var(--ink); }
+  .legal-wrap a {
+    color: var(--oxblood);
+    text-decoration: underline;
+    text-underline-offset: 2px;
+    transition: color 0.18s;
+  }
+  .legal-wrap a:hover { color: var(--ember); }
+  .legal-callout {
+    background: rgba(103,22,16,0.05);
+    border-left: 3px solid var(--oxblood);
+    padding: 18px 24px;
+    border-radius: 0 4px 4px 0;
+    margin: 24px 0;
+  }
+  .legal-callout p { margin: 0; font-weight: 500; color: var(--ink); }
+
+  /* ── FOOTER ── */
+  .legal-footer {
+    background: var(--ink);
+    padding: 40px 32px;
+    text-align: center;
+  }
+  .legal-footer-inner {
+    max-width: 760px;
+    margin: 0 auto;
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+    align-items: center;
+  }
+  .legal-footer a, .legal-footer span {
+    font-family: var(--gs);
+    font-size: 13px;
+    color: rgba(240,236,234,0.5);
+    text-decoration: none;
+    letter-spacing: 0.02em;
+    transition: color 0.18s;
+  }
+  .legal-footer a:hover { color: var(--bone); }
+  .legal-footer-links { display: flex; flex-wrap: wrap; gap: 8px; justify-content: center; align-items: center; }
+  .legal-footer-sep { color: rgba(240,236,234,0.3); }
+
+  @media (max-width: 700px) {
+    nav { padding: 18px 24px; }
+    .legal-wrap { padding: 56px 24px 88px; }
+  }
+</style>
+</head>
+<body>
+
+<nav>
+  <a href="/" class="nav-logo">Aurelian<sup>™</sup></a>
+  <a href="/" class="nav-back">← Back to site</a>
+</nav>
+
+<main class="legal-wrap">
+  <span class="legal-eyebrow">Legal</span>
+  <h1>Privacy Policy</h1>
+  <p class="legal-updated">Last updated: May 28, 2026</p>
+
+  <p class="lead">Aurelian™ ("we," "us," or "our") operates the website aureliantech.co. This Privacy Policy explains what information is collected when you visit our site, how it is used, and your rights regarding that information.</p>
+
+  <div class="legal-callout">
+    <p>We do not sell your personal information to third parties.</p>
+  </div>
+
+  <h2>Information We Collect</h2>
+  <p>We do not collect personal information such as your name, email address, or phone number unless you voluntarily provide it — for example, by booking a call through our scheduling tool, submitting a contact request, or reaching out to us directly (such as via LinkedIn).</p>
+  <p>When you visit our website, certain information is collected automatically through third-party analytics and visitor identification tools, including usage data (pages visited, time on page, browser type, device, referring URL, and approximate geographic location derived from IP address) and company-level visitor data (the organization associated with a visitor's IP address — not your name or individual identity).</p>
+
+  <h2>Tools We Use</h2>
+  <p><strong>Google Analytics 4</strong> — We use Google Analytics to understand how visitors interact with our site in aggregate. You can opt out via <a href="https://tools.google.com/dlpage/gaoptout" target="_blank" rel="noopener">Google's opt-out browser add-on</a> or review their practices at <a href="https://policies.google.com/privacy" target="_blank" rel="noopener">policies.google.com/privacy</a>.</p>
+  <p><strong>Google Ads</strong> — We may use Google Ads conversion tracking and remarketing to measure the performance of our advertising and to reach people who have visited our site. Google may set cookies to attribute conversions and show relevant ads across its network. You can manage your ad personalization settings at <a href="https://adssettings.google.com" target="_blank" rel="noopener">adssettings.google.com</a> and review Google's practices at <a href="https://policies.google.com/privacy" target="_blank" rel="noopener">policies.google.com/privacy</a>.</p>
+  <p><strong>Instantly.ai</strong> — We use Instantly.ai's visitor tracking pixel to identify the companies visiting our website at an organizational level. This does not identify you personally by name. You can review their privacy practices at <a href="https://instantly.ai/privacy" target="_blank" rel="noopener">instantly.ai/privacy</a>.</p>
+  <p><strong>Calendly</strong> — We use Calendly to let you schedule calls with us. When you book through the scheduling tool embedded on our site, Calendly collects the information you provide (such as your name, email address, phone number, and any details you enter) in order to schedule and confirm your appointment. Calendly may also set cookies to operate its scheduling widget. This information is used solely to arrange and manage the call you requested. You can review Calendly's privacy practices at <a href="https://calendly.com/privacy" target="_blank" rel="noopener">calendly.com/privacy</a>.</p>
+
+  <h2>How We Use This Information</h2>
+  <p>Information collected is used to understand who visits our site, improve our content and messaging, schedule and conduct calls you request, measure the performance of our advertising, and identify potential clients who may benefit from our services. We do not use this data for third-party advertising targeting beyond the conversion measurement and remarketing described above.</p>
+
+  <h2>Cookies</h2>
+  <p>Our website uses cookies through Google Analytics, Google Ads, and the Calendly scheduling widget to distinguish repeat visitors, understand usage patterns, measure ad performance, and operate the booking tool. Analytics and scheduling cookies do not store personally identifiable information beyond what you voluntarily submit. You may disable cookies through your browser settings at any time, though doing so may affect the scheduling tool's functionality.</p>
+
+  <h2>Data Retention &amp; Sharing</h2>
+  <p>We do not store visitor analytics data on our own servers. Data collected by Google Analytics, Google Ads, Instantly.ai, and Calendly is retained and governed by their respective privacy policies. Information you submit when booking a call is retained for the purpose of scheduling and following up on that call. We do not share, rent, or sell any visitor information to third parties for their own marketing purposes.</p>
+
+  <h2 id="do-not-sell">Do Not Sell or Share My Personal Information</h2>
+  <p>We do not sell or share your personal information with third parties for cross-context behavioral advertising or any commercial purpose. If you would like to request that data associated with you be removed from third-party tools we use, please contact us directly.</p>
+  <p>To opt out of Google Analytics data collection, use <a href="https://tools.google.com/dlpage/gaoptout" target="_blank" rel="noopener">Google's opt-out tool</a>. To manage Google Ads personalization, visit <a href="https://adssettings.google.com" target="_blank" rel="noopener">adssettings.google.com</a>. For Instantly.ai data, refer to <a href="https://instantly.ai/privacy" target="_blank" rel="noopener">their privacy policy</a>. For Calendly data, refer to <a href="https://calendly.com/privacy" target="_blank" rel="noopener">their privacy policy</a>.</p>
+
+  <h2>Children's Privacy</h2>
+  <p>Our website is intended for business professionals and is not directed at children under the age of 13. We do not knowingly collect information from children.</p>
+
+  <h2>Changes to This Policy</h2>
+  <p>We may update this Privacy Policy from time to time. Any changes will be posted on this page with an updated date. Continued use of the site after changes constitutes acceptance of the revised policy.</p>
+
+  <h2>Contact</h2>
+  <p>If you have questions about this Privacy Policy or how your data is handled, reach us at <a href="mailto:josh@aureliantech.co">josh@aureliantech.co</a> or via <a href="https://www.linkedin.com/in/josh-pritchett" target="_blank" rel="noopener">LinkedIn</a>.</p>
+</main>
+
+<footer class="legal-footer">
+  <div class="legal-footer-inner">
+    <div class="legal-footer-links">
+      <a href="mailto:josh@aureliantech.co">josh@aureliantech.co</a>
+      <span class="legal-footer-sep">·</span>
+      <span>© 2026 Aurelian™</span>
+      <span class="legal-footer-sep">·</span>
+      <a href="privacy.html">Privacy</a>
+      <span class="legal-footer-sep">·</span>
+      <a href="terms.html">Terms</a>
+      <span class="legal-footer-sep">·</span>
+      <a href="https://www.linkedin.com/company/aureliantech/" target="_blank" rel="noopener">LinkedIn</a>
+    </div>
+    <span>Attorney Advertising. Past results do not guarantee future outcomes.</span>
+  </div>
+</footer>
+
+</body>
+</html>
