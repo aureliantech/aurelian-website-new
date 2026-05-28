@@ -2371,28 +2371,46 @@
     }
   })();
 
-  // ── SYSTEM CARDS: scroll-triggered reveal (touch only) ──
-  // On touch devices the cards default to title-only; as each card scrolls
-  // into the central band of the viewport, it flips to the full text view.
+  // ── SYSTEM CARDS: scroll-triggered reveal + tap-to-toggle (touch only) ──
+  // Default = title only. As a card scrolls further up into a narrow band
+  // (later than center, so the title is seen first), it flips to the text
+  // view. Tapping a card manually toggles it and overrides scroll until the
+  // card fully leaves the viewport, at which point auto behavior resumes.
   (function () {
     const isTouch = window.matchMedia('(hover: none)').matches;
     if (!isTouch) return;
     const cards = document.querySelectorAll('.system-visual');
     if (!cards.length) return;
+
+    const manual = new WeakSet(); // cards the user has tapped
+
     const obs = new IntersectionObserver((entries) => {
       entries.forEach(entry => {
+        const card = entry.target;
         if (entry.isIntersecting) {
-          entry.target.classList.add('is-revealed');
+          // Don't fight a manual tap while the card is in view
+          if (!manual.has(card)) card.classList.add('is-revealed');
         } else {
-          entry.target.classList.remove('is-revealed');
+          // Card left the band/viewport — reset everything, resume auto
+          card.classList.remove('is-revealed');
+          manual.delete(card);
         }
       });
     }, {
-      // Trigger when the card is within the central ~45% of the viewport
-      rootMargin: '-28% 0px -28% 0px',
+      // Narrow band sitting above center -> reveal happens LATER in the scroll,
+      // after the title has had time to be read.
+      rootMargin: '-46% 0px -38% 0px',
       threshold: 0.01
     });
     cards.forEach(c => obs.observe(c));
+
+    // Tap to toggle between title and text manually
+    cards.forEach(card => {
+      card.addEventListener('click', () => {
+        manual.add(card);
+        card.classList.toggle('is-revealed');
+      });
+    });
   })();
 </script>
 </body>

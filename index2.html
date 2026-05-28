@@ -143,7 +143,7 @@
   }
 
   *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-  html { scroll-behavior: smooth; }
+  html { scroll-behavior: smooth; scroll-padding-top: 88px; }
 
   body {
     background: var(--bone);
@@ -1078,15 +1078,28 @@
   }
 
   @media (hover: none) {
+    /* DEFAULT on touch: show only the title (label), like the un-hovered desktop state */
     .system-card-overlay {
-      opacity: 1;
-      pointer-events: auto;
-      background: linear-gradient(to top, rgba(39,15,26,0.95) 40%, rgba(39,15,26,0.7) 70%, transparent 100%);
-      justify-content: flex-end;
-      padding: 36px 28px 28px;
+      opacity: 0;
+      pointer-events: none;
+      background: rgba(39,15,26,0.92);
+      justify-content: center;
+      padding: 24px 24px;
+      transition: opacity 0.4s ease;
     }
     .system-card-label {
-      display: none;
+      opacity: 1;
+      transform: none;
+      transition: opacity 0.4s ease, transform 0.4s ease;
+    }
+    /* REVEALED state (added by scroll): show the full text, fade the title — same as click/hover */
+    .system-visual.is-revealed .system-card-overlay {
+      opacity: 1;
+      pointer-events: auto;
+    }
+    .system-visual.is-revealed .system-card-label {
+      opacity: 0;
+      transform: translateY(8px);
     }
   }
 
@@ -1865,9 +1878,97 @@
   .stagger.visible > *:nth-child(4) { opacity:1; transform:translateY(0); transition-delay:.34s; }
 
   /* ── RESPONSIVE ── */
+  /* ══════════════════════════════════════
+     STICKY MOBILE CTA — floating glass pill
+     ══════════════════════════════════════ */
+  .sticky-cta {
+    position: fixed;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    z-index: 90;
+    display: none; /* shown only on mobile via media query */
+    padding: 12px 16px calc(12px + env(safe-area-inset-bottom, 0px));
+    pointer-events: none;
+    opacity: 0;
+    transform: translateY(16px);
+    transition: opacity 0.4s cubic-bezier(0.2,0.8,0.2,1), transform 0.4s cubic-bezier(0.2,0.8,0.2,1);
+  }
+
+  .sticky-cta.is-visible {
+    opacity: 1;
+    transform: translateY(0);
+    pointer-events: auto;
+  }
+
+  .sticky-cta-button {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 2px;
+    width: 100%;
+    padding: 13px 24px;
+    background: var(--oxblood);
+    color: var(--bone);
+    text-decoration: none;
+    border-radius: 14px;
+    overflow: hidden;
+    isolation: isolate;
+    box-shadow: 0 8px 28px rgba(103,22,16,0.45),
+                0 1px 0 rgba(240,236,234,0.08) inset,
+                0 0 0 1px rgba(240,236,234,0.06);
+    transition: transform 0.2s cubic-bezier(0.2,0.8,0.2,1), box-shadow 0.2s ease;
+  }
+
+  .sticky-cta-button::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: var(--ember);
+    transform: translateX(-101%);
+    transition: transform 0.45s cubic-bezier(0.7,0,0.2,1);
+    z-index: -1;
+  }
+
+  .sticky-cta-label {
+    font-family: var(--cd);
+    font-weight: 600;
+    font-size: 15px;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    line-height: 1.1;
+  }
+
+  .sticky-cta-sub {
+    font-family: var(--gs);
+    font-weight: 400;
+    font-size: 11px;
+    letter-spacing: 0.02em;
+    color: rgba(240,236,234,0.72);
+    line-height: 1.1;
+  }
+
+  .sticky-cta-button:active {
+    transform: scale(0.985);
+    box-shadow: 0 4px 16px rgba(103,22,16,0.4),
+                0 1px 0 rgba(240,236,234,0.08) inset,
+                0 0 0 1px rgba(240,236,234,0.06);
+  }
+
+  .sticky-cta-button:active::before {
+    transform: translateX(0);
+  }
+
+  @media (max-width: 640px) {
+    .sticky-cta { display: block; }
+  }
+
   @media (max-width: 1024px) {
-    #hero             { grid-template-columns: 1fr; padding: 60px 40px; min-height: auto; gap: 48px; }
-    .hero-visual      { height: 300px; }
+    #hero             { grid-template-columns: 1fr; padding: 36px 40px 56px; min-height: auto; gap: 40px; align-items: start; }
+    #hero .hero-content { padding: 0; }
+    .hero-visual      { height: 420px; background-position: center top; }
     .container, .container-narrow { padding: 0 40px; }
     #proof            { padding: 26px 40px; flex-wrap: wrap; }
     #mid-cta          { padding: 60px 40px; flex-direction: column; align-items: flex-start; }
@@ -1877,7 +1978,8 @@
     .case-grid        { grid-template-columns: 1fr; gap: 44px; }
     .booking-form     { padding: 0 40px; }
     .booking-calendly { padding: 0 40px; }
-    .booking-calendly .calendly-inline-widget { height: 1200px !important; }
+    .booking-calendly .calendly-inline-widget { height: 1050px !important; }
+    #book { padding: 80px 0 72px; }
     .guarantee-inner  { grid-template-columns: 1fr; gap: 40px; padding: 0 40px; text-align: center; }
     .guarantee-content-column { text-align: center; }
     #guarantee .eyebrow,
@@ -1897,7 +1999,16 @@
   @media (max-width: 640px) {
     nav               { padding: 0 24px; }
     .nav-links        { display: none; }
-    #hero             { padding: 48px 24px; }
+    #hero             { padding: 28px 24px 48px; }
+    .hero-visual      { height: 380px; }
+    .hero-trust       { justify-content: center; gap: 14px 22px; }
+    #hero .eyebrow    { font-size: clamp(11px, 3vw, 13px); text-wrap: balance; }
+    #book             { padding: 64px 0 56px; }
+    .booking-calendly .calendly-inline-widget { height: 1050px !important; }
+    .case-stats       { gap: 10px; }
+    .case-stats .stat { padding: 18px 8px; border-radius: 6px; }
+    .case-stats .stat-num { font-size: 26px; }
+    .case-stats .stat-label { font-size: 12px; }
     .container, .container-narrow { padding: 0 24px; }
     #proof            { padding: 22px 24px; gap: 20px; }
     .proof-logos      { gap: 20px; }
@@ -1909,7 +2020,7 @@
     .system-callout   { padding: 22px 24px; margin: 36px 24px 0; }
     .booking-form     { padding: 0 24px; }
     .booking-calendly { padding: 0 24px; }
-    .booking-calendly .calendly-inline-widget { height: 1280px !important; }
+    .booking-calendly .calendly-inline-widget { height: 1000px !important; }
     .guarantee-inner  { padding: 0 24px; gap: 32px; }
     .guarantee-seal-slot { width: 200px; height: 200px; }
     .guarantee-inner  { padding: 0 24px; }
@@ -2014,7 +2125,7 @@
 <section id="cta-band">
   <div class="cta-band-inner">
     <div class="cta-band-content">
-      <h2>Keep cases <em>coming in</em>, without<br>having to <em>go out</em>.</h2>
+      <h2>Keep cases <em>coming in</em>, without <br>having to <em>go out</em>.</h2>
       <p>When the <em>hundreds of thousands</em> of Americans searching for lawyers online are hiring you — your billable hours go towards work, instead of lunches and coffee catch-ups.</p>
     </div>
     <a href="#book" class="cta-band-button">
@@ -2208,6 +2319,14 @@
 
 </footer>
 
+<!-- ── STICKY MOBILE CTA (mobile only) ── -->
+<div class="sticky-cta" id="stickyCta" aria-hidden="true">
+  <a href="#book" class="sticky-cta-button">
+    <span class="sticky-cta-label">Book a Call</span>
+    <span class="sticky-cta-sub">30 min with our founder</span>
+  </a>
+</div>
+
 <script>
   // ── SCROLL REVEAL ──
   const io = new IntersectionObserver(entries => {
@@ -2215,6 +2334,66 @@
   }, { threshold: 0.1 });
 
   document.querySelectorAll('.fade-up, .stagger').forEach(el => io.observe(el));
+
+  // ── STICKY MOBILE CTA visibility ──
+  // Show after the user scrolls past the hero; hide once the booking
+  // section (which has its own CTA) is in view, to avoid duplicate CTAs.
+  (function () {
+    const sticky = document.getElementById('stickyCta');
+    if (!sticky) return;
+    const hero = document.getElementById('hero');
+    const book = document.getElementById('book');
+
+    let pastHero = false;
+    let bookingInView = false;
+
+    const update = () => {
+      const show = pastHero && !bookingInView;
+      sticky.classList.toggle('is-visible', show);
+      sticky.setAttribute('aria-hidden', show ? 'false' : 'true');
+    };
+
+    if (hero) {
+      new IntersectionObserver(([e]) => {
+        // pastHero = hero has scrolled mostly out of view
+        pastHero = !e.isIntersecting;
+        update();
+      }, { threshold: 0, rootMargin: '-40% 0px 0px 0px' }).observe(hero);
+    } else {
+      pastHero = true;
+    }
+
+    if (book) {
+      new IntersectionObserver(([e]) => {
+        bookingInView = e.isIntersecting;
+        update();
+      }, { threshold: 0.05 }).observe(book);
+    }
+  })();
+
+  // ── SYSTEM CARDS: scroll-triggered reveal (touch only) ──
+  // On touch devices the cards default to title-only; as each card scrolls
+  // into the central band of the viewport, it flips to the full text view.
+  (function () {
+    const isTouch = window.matchMedia('(hover: none)').matches;
+    if (!isTouch) return;
+    const cards = document.querySelectorAll('.system-visual');
+    if (!cards.length) return;
+    const obs = new IntersectionObserver((entries) => {
+      entries.forEach(entry => {
+        if (entry.isIntersecting) {
+          entry.target.classList.add('is-revealed');
+        } else {
+          entry.target.classList.remove('is-revealed');
+        }
+      });
+    }, {
+      // Trigger when the card is within the central ~45% of the viewport
+      rootMargin: '-28% 0px -28% 0px',
+      threshold: 0.01
+    });
+    cards.forEach(c => obs.observe(c));
+  })();
 </script>
 </body>
 </html>
