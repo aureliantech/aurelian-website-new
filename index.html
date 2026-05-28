@@ -1242,22 +1242,6 @@
     border-top: 1px solid rgba(103,22,16,0.07);
   }
 
-  /* One-time scroll-snap on the case study. MANDATORY = hard stop: the section
-     must align at viewport top before the user can continue. JS removes
-     .snap-active from <html> after first encounter so it's truly one-time. */
-  html.snap-active {
-    scroll-snap-type: y mandatory;
-  }
-  html.snap-active #proof-story {
-    scroll-snap-align: start;
-    scroll-snap-stop: always;
-  }
-  /* Respect users who prefer reduced motion — no snap at all for them. */
-  @media (prefers-reduced-motion: reduce) {
-    html.snap-active { scroll-snap-type: none; }
-    html.snap-active #proof-story { scroll-snap-align: none; }
-  }
-
   .case-grid {
     display: grid;
     grid-template-columns: 1fr 1.15fr;
@@ -1360,47 +1344,43 @@
     50%      { opacity: 1; }
   }
 
-  /* Arrival shimmer: thin diagonal band crosses the image once on reveal */
-  .case-portrait-shimmer {
-    position: absolute;
-    inset: -10% -40%;               /* oversize so the band fully exits frame */
-    pointer-events: none;
-    z-index: 2;
-    overflow: hidden;
-    opacity: 0;
-  }
-  .case-portrait-shimmer::after {
+  /* Oxblood halo behind the frame — medium intensity focal glow.
+     Breathes on a 5.5s cycle (different from vignette 7s, section warmth 9s)
+     so the three motions never align, creating an organic "alive" texture.
+     This is a glow + radial gradient — both on the forbidden list. Deliberate
+     rule break: medium intensity, scoped tightly to the portrait, used as the
+     section's focal point of warmth. */
+  .case-portrait-frame::after {
     content: '';
     position: absolute;
-    top: 0;
-    bottom: 0;
-    width: 18%;
-    left: -25%;                     /* starts outside left edge */
-    background: linear-gradient(
-      100deg,
-      rgba(240,236,234,0) 0%,
-      rgba(240,236,234,0.12) 45%,
-      rgba(240,236,234,0.22) 50%,
-      rgba(240,236,234,0.12) 55%,
-      rgba(240,236,234,0) 100%
-    );
-    transform: skewX(-18deg);
+    /* Halo extends well past the frame edges to read as radiating light */
+    inset: -22%;
+    z-index: -1;                    /* behind the frame's bone matting */
+    pointer-events: none;
+    background: radial-gradient(
+      ellipse at center,
+      rgba(103,22,16,0.42) 0%,
+      rgba(103,22,16,0.26) 22%,
+      rgba(103,22,16,0.12) 45%,
+      rgba(103,22,16,0.04) 70%,
+      transparent 88%);
+    /* Filter blur softens the gradient edges into a true halo, not a hard ellipse */
+    filter: blur(28px);
+    opacity: 0;
+    transition: opacity 1.2s ease-out;
   }
-  .case-portrait-frame.visible .case-portrait-shimmer {
-    animation: portrait-shimmer 1.6s ease-out 1.4s 1 forwards;
+  /* Halo fades in once the frame enters view, then breathes */
+  .case-portrait-frame.visible::after {
+    opacity: 1;
+    animation: portrait-halo 5.5s ease-in-out 1.2s infinite;
   }
-  @keyframes portrait-shimmer {
-    0%   { opacity: 0; }
-    8%   { opacity: 1; }
-    100% { opacity: 0; }
+  @keyframes portrait-halo {
+    0%, 100% { opacity: 0.78; }
+    50%      { opacity: 1; }
   }
-  .case-portrait-frame.visible .case-portrait-shimmer::after {
-    animation: shimmer-sweep 1.6s ease-out 1.4s 1 forwards;
-  }
-  @keyframes shimmer-sweep {
-    0%   { left: -25%; }
-    100% { left: 125%; }
-  }
+
+  /* Halo container override: allow it to extend past frame bounds */
+  .case-portrait-frame { isolation: auto; overflow: visible; }
 
   /* Section-level ambient warmth: low-opacity Oxblood radial behind the
      proof-story. Drifts in opacity on a slow cycle, offset from the vignette.
@@ -1432,12 +1412,12 @@
   #proof-story .container { position: relative; z-index: 1; }
 
   /* Reduced motion: kill everything kinetic. The static composition still
-     reads beautifully — frame stroke is already drawn, vignette + ambient are
-     static at midpoint opacity, no shimmer. */
+     reads beautifully — frame stroke is already drawn, vignette + halo + ambient
+     are static at midpoint opacity. */
   @media (prefers-reduced-motion: reduce) {
     .case-portrait-stroke span        { transform: scale(1); transition: none; }
     .case-portrait::after             { animation: none; opacity: 0.85; }
-    .case-portrait-shimmer            { display: none; }
+    .case-portrait-frame.visible::after { animation: none; opacity: 0.85; }
     #proof-story::before              { animation: none; opacity: 0.8; }
   }
 
@@ -2451,7 +2431,6 @@
     <div class="case-grid">
       <div class="case-portrait-frame fade-up">
         <div class="case-portrait" style="background-image: url('portraits/octavia-martinez-firm.png'); background-size: cover; background-position: center;"></div>
-        <div class="case-portrait-shimmer"></div>
         <div class="case-portrait-stroke" aria-hidden="true">
           <span class="e-top"></span>
           <span class="e-right"></span>
@@ -2655,49 +2634,54 @@
     });
   })();
 
-  // One-time scroll-snap on the case study section (runs on all devices).
-  // Arm snap on load. Hard-stop the section at the top of the viewport when
-  // user reaches it. Release the snap the moment the user attempts to scroll
-  // away (so they pass through after experiencing the hold).
+  // One-time scroll-pause on the case study section.
+  // When the section is approaching the top of the viewport from above (user is
+  // scrolling down through the page), briefly block further scroll for ~600ms
+  // so the section catches the eye. Fires once per page load. Honors reduced-motion.
   (function () {
     const proofSection = document.getElementById('proof-story');
     if (!proofSection) return;
-    document.documentElement.classList.add('snap-active');
-    let settled = false;
-    let released = false;
+    if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
 
-    const release = () => {
-      if (released) return;
-      released = true;
-      document.documentElement.classList.remove('snap-active');
+    let fired = false;
+    const PAUSE_MS = 600;        // total block duration
+    const TRIGGER_TOP_PX = 80;   // section top must be within this many px of viewport top
+    let blockedUntil = 0;
+
+    // Block scrolling by preventing default on wheel/touchmove during the pause window
+    const block = (e) => {
+      if (performance.now() < blockedUntil) e.preventDefault();
+    };
+    // Use passive:false so preventDefault works
+    const opts = { passive: false, capture: true };
+
+    const trigger = () => {
+      if (fired) return;
+      fired = true;
+      blockedUntil = performance.now() + PAUSE_MS;
+      window.addEventListener('wheel', block, opts);
+      window.addEventListener('touchmove', block, opts);
+      // After the pause, remove listeners — section never blocks again
+      setTimeout(() => {
+        window.removeEventListener('wheel', block, opts);
+        window.removeEventListener('touchmove', block, opts);
+      }, PAUSE_MS + 50);
     };
 
-    // Mark "settled" once the section is dominantly in view.
-    const snapObs = new IntersectionObserver((entries) => {
-      entries.forEach(entry => {
-        if (entry.intersectionRatio > 0.6 && !settled) {
-          settled = true;
-          snapObs.disconnect();
-        }
-      });
-    }, { threshold: [0, 0.3, 0.6, 0.8, 1.0] });
-    snapObs.observe(proofSection);
-
-    // Release the snap on any user-initiated scroll attempt AFTER settling.
-    // Wheel, touch, and keyboard scroll keys all count.
-    const onIntent = () => { if (settled) release(); };
-    window.addEventListener('wheel',    onIntent, { passive: true });
-    window.addEventListener('touchmove', onIntent, { passive: true });
-    window.addEventListener('keydown',  (e) => {
-      // Arrow keys, page keys, space, end — anything that scrolls
-      if (settled && ['ArrowDown','ArrowUp','PageDown','PageUp','End','Home',' '].includes(e.key)) {
-        release();
-      }
-    });
-
-    // Safety net: if user is in the section for more than 4s without scrolling,
-    // release anyway so they're never trapped.
-    setTimeout(() => { if (settled) release(); }, 4000);
+    // Watch for the section's top edge reaching near the top of the viewport.
+    // Only fire when user is scrolling DOWN (i.e. they reached it intentionally
+    // from above), not when the page loads with it already in view.
+    let lastY = window.scrollY;
+    let userHasScrolled = false;
+    window.addEventListener('scroll', () => {
+      const y = window.scrollY;
+      if (y > lastY + 4) userHasScrolled = true;   // direction: down
+      lastY = y;
+      if (!userHasScrolled || fired) return;
+      const top = proofSection.getBoundingClientRect().top;
+      // Fire when the section's top edge is just about to hit the viewport top
+      if (top >= 0 && top <= TRIGGER_TOP_PX) trigger();
+    }, { passive: true });
   })();
 </script>
 </body>
