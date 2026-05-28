@@ -1078,29 +1078,41 @@
   }
 
   @media (hover: none) {
-    /* DEFAULT on touch: show only the title (label), like the un-hovered desktop state */
-    .system-card-overlay {
-      opacity: 0;
-      pointer-events: none;
-      background: rgba(39,15,26,0.92);
-      justify-content: center;
-      padding: 24px 24px;
-      transition: opacity 0.4s ease;
+    .system-visual {
+      display: flex;
+      flex-direction: column;
+      justify-content: flex-end;
     }
     .system-card-label {
+      position: relative;
+      z-index: 4;
       opacity: 1;
       transform: none;
-      transition: opacity 0.4s ease, transform 0.4s ease;
+      order: 1;
+      padding: 0 24px 0;
+      margin-bottom: 6px;
     }
-    /* REVEALED state (added by scroll): show the full text, fade the title — same as click/hover */
-    .system-visual.is-revealed .system-card-overlay {
+    .system-card-overlay {
+      position: relative;
+      inset: auto;
+      order: 2;
       opacity: 1;
       pointer-events: auto;
+      background: none;
+      justify-content: flex-end;
+      padding: 0 24px 26px;
     }
-    .system-visual.is-revealed .system-card-label {
-      opacity: 0;
-      transform: translateY(8px);
+    /* Single gradient scrim across the whole lower half for legibility */
+    .system-visual::after {
+      content: '';
+      position: absolute;
+      inset: 0;
+      z-index: 1;
+      background: linear-gradient(to top, rgba(39,15,26,0.97) 0%, rgba(39,15,26,0.9) 45%, rgba(39,15,26,0.5) 72%, transparent 100%);
+      pointer-events: none;
     }
+    .system-card-label { z-index: 4; }
+    .system-card-overlay { z-index: 4; }
   }
 
   .system-cta {
@@ -1889,6 +1901,9 @@
     z-index: 90;
     display: none; /* shown only on mobile via media query */
     padding: 12px 16px calc(12px + env(safe-area-inset-bottom, 0px));
+    background: linear-gradient(to top, rgba(39,15,26,0.72) 0%, rgba(39,15,26,0.45) 55%, transparent 100%);
+    -webkit-backdrop-filter: blur(12px);
+    backdrop-filter: blur(12px);
     pointer-events: none;
     opacity: 0;
     transform: translateY(16px);
@@ -1966,9 +1981,9 @@
   }
 
   @media (max-width: 1024px) {
-    #hero             { grid-template-columns: 1fr; padding: 36px 40px 56px; min-height: auto; gap: 40px; align-items: start; }
+    #hero             { grid-template-columns: 1fr; padding: 36px 40px 0; min-height: auto; gap: 40px; align-items: start; }
     #hero .hero-content { padding: 0; }
-    .hero-visual      { height: 420px; background-position: center top; }
+    .hero-visual      { height: 300px; }
     .container, .container-narrow { padding: 0 40px; }
     #proof            { padding: 26px 40px; flex-wrap: wrap; }
     #mid-cta          { padding: 60px 40px; flex-direction: column; align-items: flex-start; }
@@ -1999,10 +2014,7 @@
   @media (max-width: 640px) {
     nav               { padding: 0 24px; }
     .nav-links        { display: none; }
-    #hero             { padding: 28px 24px 48px; }
-    .hero-visual      { height: 380px; }
-    .hero-trust       { justify-content: center; gap: 14px 22px; }
-    #hero .eyebrow    { font-size: clamp(11px, 3vw, 13px); text-wrap: balance; }
+    #hero             { padding: 28px 24px 0; }
     #book             { padding: 64px 0 56px; }
     .booking-calendly .calendly-inline-widget { height: 1050px !important; }
     .case-stats       { gap: 10px; }
@@ -2369,30 +2381,6 @@
         update();
       }, { threshold: 0.05 }).observe(book);
     }
-  })();
-
-  // ── SYSTEM CARDS: scroll-triggered reveal (touch only) ──
-  // On touch devices the cards default to title-only; as each card scrolls
-  // into the central band of the viewport, it flips to the full text view.
-  (function () {
-    const isTouch = window.matchMedia('(hover: none)').matches;
-    if (!isTouch) return;
-    const cards = document.querySelectorAll('.system-visual');
-    if (!cards.length) return;
-    const obs = new IntersectionObserver((entries) => {
-      entries.forEach(entry => {
-        if (entry.isIntersecting) {
-          entry.target.classList.add('is-revealed');
-        } else {
-          entry.target.classList.remove('is-revealed');
-        }
-      });
-    }, {
-      // Trigger when the card is within the central ~45% of the viewport
-      rootMargin: '-28% 0px -28% 0px',
-      threshold: 0.01
-    });
-    cards.forEach(c => obs.observe(c));
   })();
 </script>
 </body>
