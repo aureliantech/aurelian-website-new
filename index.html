@@ -1103,15 +1103,26 @@
       opacity: 0;
       pointer-events: none;
       background: rgba(39,15,26,0.92);
-      justify-content: flex-start;
-      padding: 28px 24px 24px;
+      justify-content: center;
+      padding: 28px 24px;
       transition: opacity 0.4s ease;
+    }
+    /* Keep title and body as one centered group instead of title-top / body-middle */
+    .system-overlay-title {
+      margin-bottom: 10px;
+    }
+    .system-overlay-body {
+      flex: 0 0 auto;
+      justify-content: flex-start;
     }
     .system-card-label {
       opacity: 1;
       transform: none;
       transition: opacity 0.4s ease, transform 0.4s ease;
     }
+    /* On touch, drop the tiny tier number ("01") — it's illegible and adds nothing.
+       Keep the name as the card's default-state title. */
+    .system-card-num { display: none; }
     /* REVEALED state (added by scroll): show the full text, fade the title — same as click/hover */
     .system-visual.is-revealed .system-card-overlay {
       opacity: 1;
@@ -2040,7 +2051,7 @@
     .system-callout   { padding: 22px 24px; margin: 36px 24px 0; }
     .booking-form     { padding: 0 24px; }
     .booking-calendly { padding: 0 24px; }
-    .booking-calendly .calendly-inline-widget { height: 1000px !important; }
+    .booking-calendly .calendly-inline-widget { height: 720px !important; }
     .guarantee-inner  { padding: 0 24px; gap: 32px; }
     .guarantee-seal-slot { width: 200px; height: 200px; }
     .guarantee-inner  { padding: 0 24px; }
