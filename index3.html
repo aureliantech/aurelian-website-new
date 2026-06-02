@@ -526,7 +526,7 @@
 
   /* ── WHO WE BUILD FOR ── */
   #audience {
-    background: var(--ink);
+    background: var(--oxblood);
     padding: 108px 0;
   }
 
@@ -737,69 +737,141 @@
 
   /* ── PROBLEM ── */
   #problem {
-    background: var(--bone);
+    background: var(--ink);
     padding: 108px 0;
   }
 
-  #problem .section-head { margin-bottom: 68px; }
+  #problem .eyebrow { color: var(--ember); opacity: 1; }
+  #problem h2 { color: var(--bone); }
+
+  #problem .section-head { margin-bottom: 68px; text-align: center; }
 
   #problem h2 {
     max-width: 680px;
-    margin-bottom: 22px;
+    margin: 0 auto 22px;
   }
 
   #problem h2 em {
     font-style: italic;
-    color: var(--oxblood);
+    color: var(--ember);
+    opacity: 1;
   }
 
-  .problem-sub {
-    font-size: 16px;
-    font-weight: 400;
-    color: var(--slate);
-    max-width: 520px;
-    line-height: 1.65;
-  }
-
-  .problem-grid {
+  .problem-list {
     display: grid;
-    grid-template-columns: repeat(3, 1fr);
-    gap: 2px;
+    grid-template-columns: 1fr;
+    gap: 14px;
+    max-width: 1180px;
+    margin: 0 auto;
   }
 
-  .problem-card {
-    background: var(--white);
-    padding: 40px 34px;
-    border-top: 2px solid var(--oxblood);
-    transition: background 0.18s;
+  .problem-item {
+    position: relative;
+    z-index: 1;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    padding: 28px 26px;
+    background: linear-gradient(180deg, rgba(240,236,234,0.055), rgba(240,236,234,0.018));
+    border: 1px solid rgba(240,236,234,0.1);
+    border-radius: 10px;
+    cursor: default;
+    transition: transform 0.32s cubic-bezier(.2,.7,.2,1), border-color 0.32s ease, background 0.32s ease, box-shadow 0.32s ease, border-radius 0.2s ease;
   }
 
-  .problem-card:hover { background: #fff; }
-
-  .problem-card-num {
-    font-size: 10px;
+  .problem-index {
+    position: absolute;
+    top: 50%;
+    right: 18px;
+    transform: translateY(-50%);
+    z-index: 0;
+    font-family: var(--cd);
+    font-size: 78px;
     font-weight: 600;
-    letter-spacing: 0.13em;
-    text-transform: uppercase;
-    color: var(--oxblood);
-    margin-bottom: 20px;
-    display: block;
+    line-height: 1;
+    letter-spacing: -0.03em;
+    color: #3a1b27;
+    opacity: 1;
+    pointer-events: none;
+    transition: opacity 0.32s ease, color 0.32s ease;
   }
 
-  .problem-card p {
-    font-size: 15px;
+  .problem-q {
+    position: relative;
+    z-index: 1;
+    font-size: 20px;
+    font-weight: 600;
+    color: var(--bone);
+    line-height: 1.3;
+    letter-spacing: -0.015em;
+    margin: 0;
+  }
+
+  .problem-reveal {
+    position: absolute;
+    left: -1px;
+    right: -1px;
+    top: 100%;
+    z-index: 6;
+    overflow: hidden;
+    max-height: 0;
+    opacity: 0;
+    padding: 0 26px;
+    background: linear-gradient(180deg, #2c121d, #240f19);
+    border: 1px solid rgba(178,41,28,0.5);
+    border-top: none;
+    border-radius: 0 0 10px 10px;
+    box-shadow: 0 26px 46px rgba(0,0,0,0.5);
+    pointer-events: none;
+    transition: max-height 0.34s cubic-bezier(.2,.7,.2,1), opacity 0.24s ease, padding 0.34s ease;
+  }
+
+  .problem-a {
+    font-size: 14.5px;
     font-weight: 400;
-    color: var(--slate);
-    line-height: 1.7;
-    margin-top: 12px;
+    color: var(--bone);
+    line-height: 1.62;
+    margin: 0;
+  }
+
+  @media (hover: hover) {
+    .problem-item:hover {
+      transform: translateY(-6px);
+      z-index: 6;
+      border-color: rgba(178,41,28,0.5);
+      background: linear-gradient(180deg, rgba(240,236,234,0.09), rgba(240,236,234,0.035));
+      box-shadow: 0 16px 34px rgba(0,0,0,0.4);
+      border-bottom-left-radius: 0;
+      border-bottom-right-radius: 0;
+    }
+    .problem-item:hover .problem-index { color: #5d2433; }
+    .problem-item:hover .problem-reveal {
+      max-height: 220px;
+      opacity: 1;
+      padding: 18px 26px 24px;
+    }
+  }
+
+  @media (min-width: 680px) {
+    .problem-list { grid-template-columns: repeat(2, 1fr); gap: 16px; }
+  }
+
+  @media (min-width: 1000px) {
+    .problem-list { grid-template-columns: repeat(3, 1fr); gap: 16px; }
+    .problem-item { padding: 34px 32px; }
+    .problem-q { font-size: 21px; }
+    .problem-index { font-size: 94px; right: 22px; }
   }
 
   /* ── DIAGNOSTIC ── */
   #diagnostic {
-    background: var(--white);
+    background: var(--oxblood);
     padding: 108px 0;
     border-top: 1px solid rgba(103,22,16,0.07);
   }
+
+  #diagnostic .eyebrow { color: var(--bone); opacity: 0.9; }
+  #diagnostic h2 { color: var(--bone); }
 
   #diagnostic .section-head {
     text-align: center;
@@ -809,13 +881,14 @@
   .diag-sub {
     font-size: 16px;
     font-weight: 400;
-    color: var(--slate);
+    color: var(--bone);
+    opacity: 0.92;
     max-width: 500px;
     margin: 0 auto;
     line-height: 1.65;
   }
 
-  .diag-sub strong { color: var(--ink); font-weight: 600; }
+  .diag-sub strong { color: var(--bone); font-weight: 600; }
 
   .checklist-wrap {
     background: var(--bone);
@@ -930,6 +1003,66 @@
   }
 
   #diag-banner a:hover { background: #fff; }
+
+  .problem-card h3 {
+    font-size: 17px;
+    font-weight: 600;
+    color: var(--bone);
+    line-height: 1.3;
+    letter-spacing: -0.01em;
+  }
+
+  /* ── FAQ ── */
+  #faq {
+    background: var(--bone);
+    padding: 108px 0;
+    border-top: 1px solid rgba(103,22,16,0.07);
+  }
+
+  #faq .section-head { text-align: center; margin-bottom: 48px; }
+
+  .faq-list { max-width: 760px; margin: 0 auto; }
+
+  .faq-item { border-bottom: 1px solid rgba(103,22,16,0.14); }
+  .faq-item:first-child { border-top: 1px solid rgba(103,22,16,0.14); }
+
+  .faq-item summary {
+    list-style: none;
+    cursor: pointer;
+    padding: 26px 48px 26px 0;
+    position: relative;
+    font-family: var(--gs);
+    font-size: 18px;
+    font-weight: 600;
+    color: var(--ink);
+    line-height: 1.4;
+  }
+
+  .faq-item summary::-webkit-details-marker { display: none; }
+
+  .faq-item summary::after {
+    content: '+';
+    position: absolute;
+    right: 6px;
+    top: 24px;
+    font-size: 26px;
+    font-weight: 400;
+    line-height: 1;
+    color: var(--oxblood);
+    transition: transform 0.2s;
+  }
+
+  .faq-item[open] summary::after { content: '\2013'; top: 26px; }
+
+  .faq-answer { padding: 0 48px 28px 0; }
+
+  .faq-answer p {
+    font-size: 15px;
+    font-weight: 400;
+    color: var(--slate);
+    line-height: 1.7;
+    margin: 0;
+  }
 
   /* ── SYSTEM ── */
   #system {
@@ -1664,6 +1797,25 @@
     line-height: 1.65;
   }
 
+  .founder-verify {
+    display: inline-block;
+    margin-top: 22px;
+    font-family: var(--gs);
+    font-size: 14px;
+    letter-spacing: 0.03em;
+    color: var(--bone);
+    opacity: 0.65;
+    text-decoration: none;
+    border-bottom: 1px solid rgba(240, 236, 234, 0.3);
+    padding-bottom: 2px;
+    transition: opacity 0.2s ease, border-color 0.2s ease;
+  }
+
+  .founder-verify:hover {
+    opacity: 1;
+    border-color: rgba(240, 236, 234, 0.7);
+  }
+
   .booking-calendly {
     max-width: 1080px;
     margin: 48px auto 0;
@@ -2136,7 +2288,6 @@
     #mid-cta          { padding: 60px 40px; flex-direction: column; align-items: flex-start; }
     .system-steps     { grid-template-columns: 1fr 1fr; gap: 24px; }
     .system-callout   { padding: 28px 32px; margin: 48px 40px 0; }
-    .problem-grid     { grid-template-columns: 1fr; gap: 2px; }
     .case-grid        { grid-template-columns: 1fr; gap: 44px; }
     .booking-form     { padding: 0 40px; }
     .booking-calendly { padding: 0 40px; }
@@ -2175,6 +2326,14 @@
     #proof            { padding: 22px 24px; gap: 20px; }
     .proof-logos      { gap: 20px; }
     .checklist-wrap   { grid-template-columns: 1fr; padding: 28px 24px; }
+    .problem-item     { padding: 24px 22px; }
+    .problem-q        { font-size: 19px; }
+    .problem-index    { font-size: 64px; right: 16px; }
+    .problem-reveal   { position: static; max-height: none; opacity: 1; padding: 0; margin-top: 12px; border: none; box-shadow: none; background: none; }
+    #problem          { padding: 72px 0; }
+    #diagnostic       { padding: 72px 0; }
+    #faq              { padding: 72px 0; }
+    .faq-item summary { font-size: 16px; }
     .check-item:nth-child(even) { padding-left: 0; border-left: none; }
     .form-grid        { grid-template-columns: 1fr; }
     #mid-cta          { padding: 48px 24px; }
@@ -2232,6 +2391,49 @@
 </section>
 
 <!-- ── WHO WE BUILD FOR ── -->
+<!-- ── PROBLEM ── -->
+<section id="problem">
+  <div class="container">
+    <div class="section-head">
+      <span class="eyebrow">The traditional approach</span>
+      <h2>It works for them. <em>Not for you.</em></h2>
+    </div>
+    <div class="problem-list">
+      <div class="problem-item">
+        <span class="problem-index">01</span>
+        <h3 class="problem-q">Networking for referrals doesn't fit your life.</h3>
+        <div class="problem-reveal"><p class="problem-a">Every event or lunch costs billable hours — and you can't tell which ones are even worth the trip.</p></div>
+      </div>
+      <div class="problem-item">
+        <span class="problem-index">02</span>
+        <h3 class="problem-q">You're too busy to market.</h3>
+        <div class="problem-reveal"><p class="problem-a">It's the first thing dropped when your caseload spikes, so it never builds momentum.</p></div>
+      </div>
+      <div class="problem-item">
+        <span class="problem-index">03</span>
+        <h3 class="problem-q">Nobody told you what converts.</h3>
+        <div class="problem-reveal"><p class="problem-a">You're guessing at content, channels, and messaging — with no way to know what's working.</p></div>
+      </div>
+      <div class="problem-item">
+        <span class="problem-index">04</span>
+        <h3 class="problem-q">Referrals can't be controlled.</h3>
+        <div class="problem-reveal"><p class="problem-a">They can't be turned up on demand when you need cases.</p></div>
+      </div>
+      <div class="problem-item">
+        <span class="problem-index">05</span>
+        <h3 class="problem-q">Your reputation hasn't traveled yet.</h3>
+        <div class="problem-reveal"><p class="problem-a">The clients searching right now have never heard of you — and can't find you.</p></div>
+      </div>
+      <div class="problem-item">
+        <span class="problem-index">06</span>
+        <h3 class="problem-q">Your phone rings with the wrong clients.</h3>
+        <div class="problem-reveal"><p class="problem-a">You waste time on people who were never going to sign — or that you don't want to sign.</p></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ── AUDIENCE ── -->
 <section id="audience">
   <div class="section-head">
     <span class="eyebrow">Who we help</span>
@@ -2280,19 +2482,6 @@
       </div>
       <span class="audience-label">Returning practitioners</span>
     </div>
-  </div>
-</section>
-
-<!-- ── CTA BAND ── -->
-<section id="cta-band">
-  <div class="cta-band-inner">
-    <div class="cta-band-content">
-      <h2>Keep cases <em>coming in</em>, without <br>having to <em>go out</em>.</h2>
-      <p>When the <em>hundreds of thousands</em> of Americans searching for lawyers online are hiring you — your billable hours go towards work, instead of lunches and coffee catch-ups.</p>
-    </div>
-    <a href="#book" class="cta-band-button">
-      <span class="cta-text">Book a Call</span>
-    </a>
   </div>
 </section>
 
@@ -2393,6 +2582,19 @@
   </div>
 </section>
 
+<!-- ── CTA BAND ── -->
+<section id="cta-band">
+  <div class="cta-band-inner">
+    <div class="cta-band-content">
+      <h2>Keep cases <em>coming in</em>, without <br>having to <em>go out</em>.</h2>
+      <p>When the <em>hundreds of thousands</em> of Americans searching for lawyers online are hiring you — your billable hours go towards work, instead of lunches and coffee catch-ups.</p>
+    </div>
+    <a href="#book" class="cta-band-button">
+      <span class="cta-text">Book a Call</span>
+    </a>
+  </div>
+</section>
+
 <!-- ── CASE STUDY ── -->
 <section id="proof-story">
   <div class="container">
@@ -2438,6 +2640,42 @@
   </div>
 </section>
 
+<!-- ── FAQ ── -->
+<section id="faq">
+  <div class="container-narrow">
+    <div class="section-head">
+      <span class="eyebrow">Before you book</span>
+      <h2>The questions skeptical attorneys actually ask.</h2>
+    </div>
+    <div class="faq-list">
+      <details class="faq-item">
+        <summary>How is this different from every other legal marketer?</summary>
+        <div class="faq-answer"><p>Most sell you one channel — SEO, ads, a website — and hand you a report. We build the entire system around your positioning, run it for you, and track every case back to its source. You own all of it: the domain, the site, the code. And our fee is flat, with no cut of your ad spend — so we have no reason to inflate it.</p></div>
+      </details>
+      <details class="faq-item">
+        <summary>Will this comply with my state's advertising rules?</summary>
+        <div class="faq-answer"><p>You're always the final word on your bar's rules, and nothing goes live without your approval. We build to attorney-advertising requirements — disclaimers, testimonial rules, solicitation limits — and work within your jurisdiction. We're not your ethics counsel, but compliance is designed in from the start, not bolted on after.</p></div>
+      </details>
+      <details class="faq-item">
+        <summary>What if it doesn't work?</summary>
+        <div class="faq-answer"><p>Then you don't pay us. If the system hasn't produced new cases that cover our fee within 30 days, we refund 100% of it. Your only real cost is ad spend — which goes to Google, not us, and is capped at $2,000.</p></div>
+      </details>
+      <details class="faq-item">
+        <summary>What does it cost?</summary>
+        <div class="faq-answer"><p>A flat monthly fee, plus an ad budget you control and pay directly to Google. We don't post a number here because the right setup depends on your market and goals — you'll get exact pricing on the call, with no obligation.</p></div>
+      </details>
+      <details class="faq-item">
+        <summary>Do I have to change my current website or setup?</summary>
+        <div class="faq-answer"><p>No. We can stand up a completely separate system that runs parallel to what you already have and generates its own cases. Nothing you've built breaks or goes away.</p></div>
+      </details>
+      <details class="faq-item">
+        <summary>I don't have time to manage this.</summary>
+        <div class="faq-answer"><p>That's the point. It's done entirely for you — positioning, website, ads, and intake. You show up to the consults we book; we handle everything that fills your calendar.</p></div>
+      </details>
+    </div>
+  </div>
+</section>
+
 <!-- ── GUARANTEE ── -->
 <section id="guarantee">
   <div class="guarantee-inner">
@@ -2450,7 +2688,8 @@
       <span class="eyebrow">Our guarantee</span>
       <h2>Your new cases pay for us&nbsp;— <em>or we refund our fee.</em></h2>
       <p class="guarantee-body">We build a separate, tracked system that generates its own cases — not your referrals or existing traffic. If they haven't covered our fee within 30 days, we refund 100% of it.</p>
-      <p class="guarantee-fineprint">Your ad spend goes to Google, not to us, and we cap it at $2,000 for your first 30 days. That's your entire risk.</p>
+      <p class="guarantee-fineprint">Our fee is simple: a flat monthly rate — no commissions, no cut of your ad spend.</p>
+      <p class="guarantee-fineprint" style="margin-top: 14px;">Your ad spend goes to Google, not to us, and we cap it at $2,000 for your first 30 days. That's your entire risk.</p>
     </div>
   </div>
 </section>
@@ -2460,8 +2699,9 @@
   <div class="section-head fade-up">
     <div class="container-narrow">
       <span class="eyebrow">Book a call</span>
-      <h2>30 minutes with Josh, our founder.</h2>
-      <p class="book-sub">Before the call, Josh will study your firm, positioning, model, and the clients you're targeting. On the call, you'll get his honest read on your pricing, positioning, ideal client profile, and what's working for attorneys like you.<br><br><strong>Whether or not we're a fit, you'll leave the call knowing things about your business you didn't walk in with.</strong></p>
+      <h2>30 minutes with Josh Pritchett, our founder.</h2>
+      <p class="book-sub">Before Aurelian™, Josh spent his career in corporate strategy and M&amp;A at a Fortune 50 company — then built and sold a company of his own. On the call, you'll get his honest read on your pricing, positioning, ideal client profile, and what's working for other firms like yours.<br><br><strong>Whether or not we're a fit, you'll leave the call knowing things about your business you didn't walk in with.</strong></p>
+      <a class="founder-verify" href="https://www.linkedin.com/in/josh-pritchett" target="_blank" rel="noopener noreferrer">Verify Josh on LinkedIn &rarr;</a>
     </div>
   </div>
   <div class="booking-calendly">
@@ -2480,7 +2720,7 @@
     <div class="footer-monument-inner">
       <div class="footer-mark-group">
         <h2 class="footer-display" aria-label="Aurelian">Aurelian<span class="footer-display-tm">&trade;</span></h2>
-        <p class="footer-statement">Because you have enough on your plate already.</p>
+        <p class="footer-statement">Because you have enough on your plate already.</p></div>
       </div>
       <a href="#book" class="footer-cta-button">
         <span class="footer-cta-text">Book a Call</span>
