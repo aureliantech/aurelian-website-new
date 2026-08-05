@@ -441,6 +441,12 @@
   .new-client-btn:hover{background:#2a3646;}
   .new-client-btn.danger{background:var(--dq);}
   .new-client-btn.danger:hover{background:#8f2e2e;}
+  .client-footer{
+    text-align:right;
+    margin-top:24px;
+  }
+  .client-footer .new-client-btn{display:inline-flex;}
+  #editable .client-footer{display:none;}
 
   .call-header{margin-bottom:24px;}
   .call-header label{
@@ -479,7 +485,6 @@
     </div>
     <button class="new-client-btn" id="new-client-btn" onclick="saveAsNewClient()">+ Save as New Client</button>
     <button class="new-client-btn" id="save-edits-btn" onclick="saveEditsToClient()">Save Edits</button>
-    <button class="new-client-btn danger" id="delete-client-btn" onclick="deleteCurrentClient()">Delete This Client</button>
   </div>
 
   <div id="panels-container">
@@ -1056,6 +1061,10 @@
         </div>
       </div>
 
+    <div class="client-footer">
+      <button class="new-client-btn danger" onclick="deleteCurrentClient()">Delete This Client</button>
+    </div>
+
     </div>
   </div>
 
@@ -1074,7 +1083,6 @@
     document.querySelectorAll('.panel').forEach(p=>p.classList.toggle('active', p.id===name));
     document.getElementById('new-client-btn').classList.toggle('visible', name === 'editable');
     document.getElementById('save-edits-btn').classList.toggle('visible', name.startsWith('client-'));
-    document.getElementById('delete-client-btn').classList.toggle('visible', name.startsWith('client-'));
     window.scrollTo({top:0, behavior:'smooth'});
   }
   document.getElementById('tabs-bar').addEventListener('click', (e)=>{
@@ -1136,6 +1144,15 @@
         ul.insertAdjacentElement('afterend', addBtn);
       }
     });
+  }
+
+  // ---- Retrofit older saved clients that predate the delete-client footer ----
+  function ensureClientFooter(panel){
+    if(panel.querySelector('.client-footer')) return;
+    const footer = document.createElement('div');
+    footer.className = 'client-footer';
+    footer.innerHTML = '<button class="new-client-btn danger" onclick="deleteCurrentClient()">Delete This Client</button>';
+    panel.appendChild(footer);
   }
 
   function wireStopHeads(root){
@@ -1293,6 +1310,7 @@
 
     document.getElementById('panels-container').appendChild(clone);
     upgradeLegacyPracticeAreas(clone);
+    ensureClientFooter(clone);
     wireStopHeads(clone);
     persistClient(id, name, clone.innerHTML);
 
@@ -1340,6 +1358,7 @@
         panel.innerHTML = html;
         document.getElementById('panels-container').appendChild(panel);
         upgradeLegacyPracticeAreas(panel);
+        ensureClientFooter(panel);
         wireStopHeads(panel);
       }
     }catch(err){ console.error('Load error:', err); }
