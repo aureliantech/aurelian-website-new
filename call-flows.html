@@ -884,6 +884,7 @@
               <p>Case Types (schedule):</p>
               <ul class="case-type-list">
                 <li class="case-type-row"><button class="subtoggle" onclick="toggleSub(this)">Practice Area 1</button>
+                  <button class="case-type-remove" onclick="this.closest('.case-type-row').remove()">✕</button>
                   <div class="subpanel">
                     <p class="script-section-label">Screening &amp; Qualifying</p>
                     <span class="line">"Can you tell me a bit more about what's going on with [PRACTICE AREA]?"</span>
@@ -908,156 +909,9 @@
                     </ul>
                   </div>
                 </li>
-                <li class="case-type-row"><button class="subtoggle" onclick="toggleSub(this)">Practice Area 2</button>
-                  <div class="subpanel">
-                    <p class="script-section-label">Screening &amp; Qualifying</p>
-                    <span class="line">"Can you tell me a bit more about what's going on with [PRACTICE AREA]?"</span>
-                    <span class="line">"What's the biggest concern or risk you're worried about if you don't get this handled quickly?"</span>
-                    <span class="line">"Just so I can point you to the right next step — [FEE STRUCTURE PLACEHOLDER]. Does that work for your situation?"</span>
-                    <ul>
-                      <li><button class="subtoggle" onclick="toggleSub(this)">Yes (schedule)</button>
-                        <div class="subpanel">
-                          <hr class="section-divider"><p class="script-section-label">PNC Schedule</p>
-                          <span class="line">"Great. I'd be happy to get you scheduled for a free, 30-minute phone appointment."</span>
-                          <div class="note">Name:<br>Regarding:<br>Case Type: [PRACTICE AREA]</div>
-                          <div class="note">[CHANGE TIMEZONE IF NEEDED]</div>
-                          <p><a href="#" onclick="return false;" style="color:#1D4ED8;font-weight:700;text-decoration:underline;">Scheduling Link</a></p>
-                          <span class="line">"Thank you for that information. Your appointment has been scheduled for (Date/Time). You should be receiving an email confirmation shortly. Have a great day!"</span>
-                        </div>
-                      </li>
-                      <li><button class="subtoggle" onclick="toggleSub(this)">No (script)</button>
-                        <div class="subpanel">
-                          <span class="line">"No problem at all — if anything changes or you decide you'd like to move forward, please feel free to give us a call back. We're happy to help whenever you're ready."</span>
-                        </div>
-                      </li>
-                    </ul>
-                  </div>
-                </li>
-                <li class="case-type-row"><button class="subtoggle" onclick="toggleSub(this)">Practice Area 3</button>
-                  <div class="subpanel">
-                    <p class="script-section-label">Screening &amp; Qualifying</p>
-                    <span class="line">"Can you tell me a bit more about what's going on with [PRACTICE AREA]?"</span>
-                    <span class="line">"What's the biggest concern or risk you're worried about if you don't get this handled quickly?"</span>
-                    <span class="line">"Just so I can point you to the right next step — [FEE STRUCTURE PLACEHOLDER]. Does that work for your situation?"</span>
-                    <ul>
-                      <li><button class="subtoggle" onclick="toggleSub(this)">Yes (schedule)</button>
-                        <div class="subpanel">
-                          <hr class="section-divider"><p class="script-section-label">PNC Schedule</p>
-                          <span class="line">"Great. I'd be happy to get you scheduled for a free, 30-minute phone appointment."</span>
-                          <div class="note">Name:<br>Regarding:<br>Case Type: [PRACTICE AREA]</div>
-                          <div class="note">[CHANGE TIMEZONE IF NEEDED]</div>
-                          <p><a href="#" onclick="return false;" style="color:#1D4ED8;font-weight:700;text-decoration:underline;">Scheduling Link</a></p>
-                          <span class="line">"Thank you for that information. Your appointment has been scheduled for (Date/Time). You should be receiving an email confirmation shortly. Have a great day!"</span>
-                        </div>
-                      </li>
-                      <li><button class="subtoggle" onclick="toggleSub(this)">No (script)</button>
-                        <div class="subpanel">
-                          <span class="line">"No problem at all — if anything changes or you decide you'd like to move forward, please feel free to give us a call back. We're happy to help whenever you're ready."</span>
-                        </div>
-                      </li>
-                    </ul>
-                  </div>
-                </li>
-                <li class="case-type-row"><button class="subtoggle" onclick="toggleSub(this)">Practice Area 4</button>
-                  <div class="subpanel">
-                    <p class="script-section-label">Screening &amp; Qualifying</p>
-                    <span class="line">"Can you tell me a bit more about what's going on with [PRACTICE AREA]?"</span>
-                    <span class="line">"What's the biggest concern or risk you're worried about if you don't get this handled quickly?"</span>
-                    <span class="line">"Just so I can point you to the right next step — [FEE STRUCTURE PLACEHOLDER]. Does that work for your situation?"</span>
-                    <ul>
-                      <li><button class="subtoggle" onclick="toggleSub(this)">Yes (schedule)</button>
-                        <div class="subpanel">
-                          <hr class="section-divider"><p class="script-section-label">PNC Schedule</p>
-                          <span class="line">"Great. I'd be happy to get you scheduled for a free, 30-minute phone appointment."</span>
-                          <div class="note">Name:<br>Regarding:<br>Case Type: [PRACTICE AREA]</div>
-                          <div class="note">[CHANGE TIMEZONE IF NEEDED]</div>
-                          <p><a href="#" onclick="return false;" style="color:#1D4ED8;font-weight:700;text-decoration:underline;">Scheduling Link</a></p>
-                          <span class="line">"Thank you for that information. Your appointment has been scheduled for (Date/Time). You should be receiving an email confirmation shortly. Have a great day!"</span>
-                        </div>
-                      </li>
-                      <li><button class="subtoggle" onclick="toggleSub(this)">No (script)</button>
-                        <div class="subpanel">
-                          <span class="line">"No problem at all — if anything changes or you decide you'd like to move forward, please feel free to give us a call back. We're happy to help whenever you're ready."</span>
-                        </div>
-                      </li>
-                    </ul>
-                  </div>
-                </li>
-                <li class="case-type-row"><button class="subtoggle" onclick="toggleSub(this)">Practice Area 5</button>
-                  <div class="subpanel">
-                    <p class="script-section-label">Screening &amp; Qualifying</p>
-                    <span class="line">"Can you tell me a bit more about what's going on with [PRACTICE AREA]?"</span>
-                    <span class="line">"What's the biggest concern or risk you're worried about if you don't get this handled quickly?"</span>
-                    <span class="line">"Just so I can point you to the right next step — [FEE STRUCTURE PLACEHOLDER]. Does that work for your situation?"</span>
-                    <ul>
-                      <li><button class="subtoggle" onclick="toggleSub(this)">Yes (schedule)</button>
-                        <div class="subpanel">
-                          <hr class="section-divider"><p class="script-section-label">PNC Schedule</p>
-                          <span class="line">"Great. I'd be happy to get you scheduled for a free, 30-minute phone appointment."</span>
-                          <div class="note">Name:<br>Regarding:<br>Case Type: [PRACTICE AREA]</div>
-                          <div class="note">[CHANGE TIMEZONE IF NEEDED]</div>
-                          <p><a href="#" onclick="return false;" style="color:#1D4ED8;font-weight:700;text-decoration:underline;">Scheduling Link</a></p>
-                          <span class="line">"Thank you for that information. Your appointment has been scheduled for (Date/Time). You should be receiving an email confirmation shortly. Have a great day!"</span>
-                        </div>
-                      </li>
-                      <li><button class="subtoggle" onclick="toggleSub(this)">No (script)</button>
-                        <div class="subpanel">
-                          <span class="line">"No problem at all — if anything changes or you decide you'd like to move forward, please feel free to give us a call back. We're happy to help whenever you're ready."</span>
-                        </div>
-                      </li>
-                    </ul>
-                  </div>
-                </li>
-                <li class="case-type-row"><button class="subtoggle" onclick="toggleSub(this)">Practice Area 6</button>
-                  <div class="subpanel">
-                    <p class="script-section-label">Screening &amp; Qualifying</p>
-                    <span class="line">"Can you tell me a bit more about what's going on with [PRACTICE AREA]?"</span>
-                    <span class="line">"What's the biggest concern or risk you're worried about if you don't get this handled quickly?"</span>
-                    <span class="line">"Just so I can point you to the right next step — [FEE STRUCTURE PLACEHOLDER]. Does that work for your situation?"</span>
-                    <ul>
-                      <li><button class="subtoggle" onclick="toggleSub(this)">Yes (schedule)</button>
-                        <div class="subpanel">
-                          <hr class="section-divider"><p class="script-section-label">PNC Schedule</p>
-                          <span class="line">"Great. I'd be happy to get you scheduled for a free, 30-minute phone appointment."</span>
-                          <div class="note">Name:<br>Regarding:<br>Case Type: [PRACTICE AREA]</div>
-                          <div class="note">[CHANGE TIMEZONE IF NEEDED]</div>
-                          <p><a href="#" onclick="return false;" style="color:#1D4ED8;font-weight:700;text-decoration:underline;">Scheduling Link</a></p>
-                          <span class="line">"Thank you for that information. Your appointment has been scheduled for (Date/Time). You should be receiving an email confirmation shortly. Have a great day!"</span>
-                        </div>
-                      </li>
-                      <li><button class="subtoggle" onclick="toggleSub(this)">No (script)</button>
-                        <div class="subpanel">
-                          <span class="line">"No problem at all — if anything changes or you decide you'd like to move forward, please feel free to give us a call back. We're happy to help whenever you're ready."</span>
-                        </div>
-                      </li>
-                    </ul>
-                  </div>
-                </li>
-                <li class="case-type-row"><button class="subtoggle" onclick="toggleSub(this)">Practice Area 7</button>
-                  <div class="subpanel">
-                    <p class="script-section-label">Screening &amp; Qualifying</p>
-                    <span class="line">"Can you tell me a bit more about what's going on with [PRACTICE AREA]?"</span>
-                    <span class="line">"What's the biggest concern or risk you're worried about if you don't get this handled quickly?"</span>
-                    <span class="line">"Just so I can point you to the right next step — [FEE STRUCTURE PLACEHOLDER]. Does that work for your situation?"</span>
-                    <ul>
-                      <li><button class="subtoggle" onclick="toggleSub(this)">Yes (schedule)</button>
-                        <div class="subpanel">
-                          <hr class="section-divider"><p class="script-section-label">PNC Schedule</p>
-                          <span class="line">"Great. I'd be happy to get you scheduled for a free, 30-minute phone appointment."</span>
-                          <div class="note">Name:<br>Regarding:<br>Case Type: [PRACTICE AREA]</div>
-                          <div class="note">[CHANGE TIMEZONE IF NEEDED]</div>
-                          <p><a href="#" onclick="return false;" style="color:#1D4ED8;font-weight:700;text-decoration:underline;">Scheduling Link</a></p>
-                          <span class="line">"Thank you for that information. Your appointment has been scheduled for (Date/Time). You should be receiving an email confirmation shortly. Have a great day!"</span>
-                        </div>
-                      </li>
-                      <li><button class="subtoggle" onclick="toggleSub(this)">No (script)</button>
-                        <div class="subpanel">
-                          <span class="line">"No problem at all — if anything changes or you decide you'd like to move forward, please feel free to give us a call back. We're happy to help whenever you're ready."</span>
-                        </div>
-                      </li>
-                    </ul>
-                  </div>
-                </li>
+              </ul>
+              <button class="add-case-type" onclick="addPracticeAreaRow(this)">+ Add practice area</button>
+              <ul class="case-type-list" style="margin-top:4px;">
                 <li class="case-type-row" style="border-bottom:none;"><div class="editable" style="border-bottom:none;flex:none;">Other (msg)</div></li>
               </ul>
             </div>
@@ -1264,6 +1118,41 @@
       box.style.display = 'none';
     };
     reader.readAsDataURL(file);
+  }
+
+  // ---- Add a new practice area row (Editable tab and any client tab cloned from it) ----
+  function addPracticeAreaRow(btn){
+    const list = btn.previousElementSibling;
+    const li = document.createElement('li');
+    li.className = 'case-type-row';
+    li.innerHTML = `
+      <button class="subtoggle" onclick="toggleSub(this)">New Practice Area</button>
+      <button class="case-type-remove" onclick="this.closest('.case-type-row').remove()">✕</button>
+      <div class="subpanel">
+        <p class="script-section-label">Screening &amp; Qualifying</p>
+        <span class="line">"Can you tell me a bit more about what's going on with [PRACTICE AREA]?"</span>
+        <span class="line">"What's the biggest concern or risk you're worried about if you don't get this handled quickly?"</span>
+        <span class="line">"Just so I can point you to the right next step — [FEE STRUCTURE PLACEHOLDER]. Does that work for your situation?"</span>
+        <ul>
+          <li><button class="subtoggle" onclick="toggleSub(this)">Yes (schedule)</button>
+            <div class="subpanel">
+              <hr class="section-divider"><p class="script-section-label">PNC Schedule</p>
+              <span class="line">"Great. I'd be happy to get you scheduled for a free, 30-minute phone appointment."</span>
+              <div class="note">Name:<br>Regarding:<br>Case Type: [PRACTICE AREA]</div>
+              <div class="note">[CHANGE TIMEZONE IF NEEDED]</div>
+              <p><a href="#" onclick="return false;" style="color:#1D4ED8;font-weight:700;text-decoration:underline;">Scheduling Link</a></p>
+              <span class="line">"Thank you for that information. Your appointment has been scheduled for (Date/Time). You should be receiving an email confirmation shortly. Have a great day!"</span>
+            </div>
+          </li>
+          <li><button class="subtoggle" onclick="toggleSub(this)">No (script)</button>
+            <div class="subpanel">
+              <span class="line">"No problem at all — if anything changes or you decide you'd like to move forward, please feel free to give us a call back. We're happy to help whenever you're ready."</span>
+            </div>
+          </li>
+        </ul>
+      </div>
+    `;
+    list.appendChild(li);
   }
 
   function slugify(str){
