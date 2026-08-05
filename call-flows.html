@@ -311,6 +311,43 @@
     font-size:12px;
     margin-top:10px;
   }
+  .map-upload{
+    width:100%;
+    max-width:520px;
+    margin-top:10px;
+  }
+  .map-upload-box{
+    aspect-ratio:16/10;
+    background:#EDE9DE;
+    border:1px dashed var(--line-dim);
+    border-radius:8px;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    color:var(--ink-soft);
+    font-family:'IBM Plex Mono',monospace;
+    font-size:12px;
+    cursor:pointer;
+    text-align:center;
+    padding:12px;
+  }
+  .map-upload-box:hover{border-color:var(--line);color:var(--line);}
+  .map-upload img{
+    display:block;
+    width:100%;
+    aspect-ratio:16/10;
+    object-fit:cover;
+    border-radius:8px;
+    border:1px solid var(--rule);
+    cursor:pointer;
+  }
+  .map-upload .replace-label{
+    display:block;
+    font-family:'IBM Plex Mono',monospace;
+    font-size:11px;
+    color:var(--ink-soft);
+    margin-top:6px;
+  }
 
   .editable{
     outline:none;
@@ -1136,7 +1173,11 @@
           <div class="stop-body"><div class="stop-body-inner">
             <div class="plain-script">
               <span class="line">"We are located in [BUILDING DESCRIPTION] on [STREET NAME]. Parking is [PARKING NOTES]."</span>
-              <div class="map-placeholder">[ MAP IMAGE ]</div>
+              <div class="map-upload" contenteditable="false">
+                <div class="map-upload-box" onclick="this.nextElementSibling.click()">Click to upload a map image</div>
+                <img class="map-image" style="display:none;" onclick="this.nextElementSibling.click()">
+                <input type="file" accept="image/*" style="display:none;" onchange="handleMapImageUpload(this)">
+              </div>
             </div>
           </div></div>
         </div>
@@ -1209,6 +1250,22 @@
   const pristineEditableHTML = document.getElementById('editable').innerHTML;
 
   // ---- Save current tab as a new client (persisted via /api/clients on Vercel) ----
+  // ---- Map image upload (stored as a data URI, saved along with the rest of the client's HTML) ----
+  function handleMapImageUpload(input){
+    const file = input.files[0];
+    if(!file) return;
+    const container = input.closest('.map-upload');
+    const box = container.querySelector('.map-upload-box');
+    const img = container.querySelector('.map-image');
+    const reader = new FileReader();
+    reader.onload = (e)=>{
+      img.src = e.target.result;
+      img.style.display = 'block';
+      box.style.display = 'none';
+    };
+    reader.readAsDataURL(file);
+  }
+
   function slugify(str){
     return str.toLowerCase().replace(/[^a-z0-9]+/g,'-').replace(/(^-|-$)/g,'') || 'client';
   }
