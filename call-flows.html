@@ -391,6 +391,20 @@
     margin:16px 0;
   }
 
+  .set-link-btn{
+    background:none;
+    border:1px solid var(--line-dim);
+    color:var(--ink-soft);
+    border-radius:6px;
+    padding:2px 8px;
+    font-size:11.5px;
+    font-family:'IBM Plex Mono',monospace;
+    cursor:pointer;
+    margin-left:6px;
+    vertical-align:middle;
+  }
+  .set-link-btn:hover{border-color:var(--line);color:var(--line);}
+
   .add-case-type{
     margin-top:8px;
     background:none;
@@ -897,7 +911,7 @@
                           <span class="line">"Great. I'd be happy to get you scheduled for a free, 30-minute phone appointment."</span>
                           <div class="note">Name:<br>Regarding:<br>Case Type: [PRACTICE AREA]</div>
                           <div class="note">[CHANGE TIMEZONE IF NEEDED]</div>
-                          <p><a href="#" onclick="return false;" style="color:#1D4ED8;font-weight:700;text-decoration:underline;">Scheduling Link</a></p>
+                          <p><a href="#" target="_blank" class="scheduling-link" style="color:#1D4ED8;font-weight:700;text-decoration:underline;">Scheduling Link</a> <button class="set-link-btn" contenteditable="false" onclick="setSchedulingLink(this)">Set link</button></p>
                           <span class="line">"Thank you for that information. Your appointment has been scheduled for (Date/Time). You should be receiving an email confirmation shortly. Have a great day!"</span>
                         </div>
                       </li>
@@ -1105,6 +1119,16 @@
 
   // ---- Save current tab as a new client (persisted via /api/clients on Vercel) ----
   // ---- Map image upload (stored as a data URI, saved along with the rest of the client's HTML) ----
+  // ---- Set the real scheduling link URL for a practice area ----
+  function setSchedulingLink(btn){
+    const link = btn.previousElementSibling;
+    const current = link.getAttribute('href');
+    const url = prompt("Paste the attorney's scheduling link (e.g. Calendly, Acuity, etc.):", current === '#' ? '' : current);
+    if(url){
+      link.setAttribute('href', url);
+    }
+  }
+
   function handleMapImageUpload(input){
     const file = input.files[0];
     if(!file) return;
@@ -1140,7 +1164,7 @@
               <span class="line">"Great. I'd be happy to get you scheduled for a free, 30-minute phone appointment."</span>
               <div class="note">Name:<br>Regarding:<br>Case Type: [PRACTICE AREA]</div>
               <div class="note">[CHANGE TIMEZONE IF NEEDED]</div>
-              <p><a href="#" onclick="return false;" style="color:#1D4ED8;font-weight:700;text-decoration:underline;">Scheduling Link</a></p>
+              <p><a href="#" target="_blank" class="scheduling-link" style="color:#1D4ED8;font-weight:700;text-decoration:underline;">Scheduling Link</a> <button class="set-link-btn" contenteditable="false" onclick="setSchedulingLink(this)">Set link</button></p>
               <span class="line">"Thank you for that information. Your appointment has been scheduled for (Date/Time). You should be receiving an email confirmation shortly. Have a great day!"</span>
             </div>
           </li>
