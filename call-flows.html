@@ -423,6 +423,7 @@
       <button class="tab" data-tab="editable">Editable</button>
     </div>
     <button class="new-client-btn" id="new-client-btn" onclick="saveAsNewClient()">+ Save as New Client</button>
+    <button class="new-client-btn" id="save-edits-btn" onclick="saveEditsToClient()">Save Edits</button>
   </div>
 
   <div id="panels-container">
@@ -1158,6 +1159,7 @@
     document.querySelectorAll('.tab').forEach(t=>t.classList.toggle('active', t.dataset.tab===name));
     document.querySelectorAll('.panel').forEach(p=>p.classList.toggle('active', p.id===name));
     document.getElementById('new-client-btn').classList.toggle('visible', name === 'editable');
+    document.getElementById('save-edits-btn').classList.toggle('visible', name.startsWith('client-'));
     window.scrollTo({top:0, behavior:'smooth'});
   }
   document.getElementById('tabs-bar').addEventListener('click', (e)=>{
@@ -1265,6 +1267,21 @@
     activateTab(id);
   }
 
+  function saveEditsToClient(){
+    const activePanel = document.querySelector('.panel.active');
+    if(!activePanel || !activePanel.id.startsWith('client-')) return;
+    const id = activePanel.id;
+    const tabBtn = document.querySelector(`.tab[data-tab="${id}"]`);
+    const name = tabBtn ? tabBtn.textContent : id;
+
+    persistClient(id, name, activePanel.innerHTML);
+
+    const btn = document.getElementById('save-edits-btn');
+    const original = btn.textContent;
+    btn.textContent = 'Saved ✓';
+    setTimeout(()=>{ btn.textContent = original; }, 1500);
+  }
+
   // ---- Restore previously-saved clients on load, from the shared Vercel backend ----
   async function restoreSavedClients(){
     try{
@@ -1281,6 +1298,7 @@
         const panel = document.createElement('div');
         panel.className = 'panel';
         panel.id = id;
+        panel.setAttribute('contenteditable', 'true');
         panel.innerHTML = html;
         document.getElementById('panels-container').appendChild(panel);
         wireStopHeads(panel);
