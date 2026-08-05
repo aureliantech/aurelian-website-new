@@ -439,6 +439,8 @@
   }
   .new-client-btn.visible{display:inline-flex;}
   .new-client-btn:hover{background:#2a3646;}
+  .new-client-btn.danger{background:var(--dq);}
+  .new-client-btn.danger:hover{background:#8f2e2e;}
 
   .call-header{margin-bottom:24px;}
   .call-header label{
@@ -477,6 +479,7 @@
     </div>
     <button class="new-client-btn" id="new-client-btn" onclick="saveAsNewClient()">+ Save as New Client</button>
     <button class="new-client-btn" id="save-edits-btn" onclick="saveEditsToClient()">Save Edits</button>
+    <button class="new-client-btn danger" id="delete-client-btn" onclick="deleteCurrentClient()">Delete This Client</button>
   </div>
 
   <div id="panels-container">
@@ -1071,6 +1074,7 @@
     document.querySelectorAll('.panel').forEach(p=>p.classList.toggle('active', p.id===name));
     document.getElementById('new-client-btn').classList.toggle('visible', name === 'editable');
     document.getElementById('save-edits-btn').classList.toggle('visible', name.startsWith('client-'));
+    document.getElementById('delete-client-btn').classList.toggle('visible', name.startsWith('client-'));
     window.scrollTo({top:0, behavior:'smooth'});
   }
   document.getElementById('tabs-bar').addEventListener('click', (e)=>{
@@ -1103,6 +1107,37 @@
   }
 
   // ---- Accordions, scoped so newly-cloned client panels get wired up too ----
+  // ---- Retrofit older saved clients (saved before add/remove-practice-area existed) ----
+  function upgradeLegacyPracticeAreas(panel){
+    panel.querySelectorAll('ul.case-type-list').forEach(ul=>{
+      const rows = Array.from(ul.children).filter(li=>li.classList.contains('case-type-row'));
+      const isScreeningList = rows.some(li=>li.querySelector('.script-section-label'));
+      if(!isScreeningList) return; // skip the fixed "Other (msg)" list
+
+      rows.forEach(li=>{
+        if(!li.querySelector('.case-type-remove')){
+          const toggleBtn = li.querySelector('button.subtoggle');
+          if(toggleBtn){
+            const removeBtn = document.createElement('button');
+            removeBtn.className = 'case-type-remove';
+            removeBtn.textContent = '✕';
+            removeBtn.setAttribute('onclick', 'removeCaseTypeRow(this)');
+            toggleBtn.insertAdjacentElement('afterend', removeBtn);
+          }
+        }
+      });
+
+      const next = ul.nextElementSibling;
+      if(!next || !next.classList.contains('add-case-type')){
+        const addBtn = document.createElement('button');
+        addBtn.className = 'add-case-type';
+        addBtn.textContent = '+ Add practice area';
+        addBtn.setAttribute('onclick', 'addPracticeAreaRow(this)');
+        ul.insertAdjacentElement('afterend', addBtn);
+      }
+    });
+  }
+
   function wireStopHeads(root){
     root.querySelectorAll('.stop-head').forEach(head=>{
       head.addEventListener('click', ()=>{
@@ -1211,6 +1246,27 @@
     }catch(err){ console.error('Delete error:', err); }
   }
 
+  async function deleteCurrentClient(){
+    const activePanel = document.querySelector('.panel.active');
+    if(!activePanel || !activePanel.id.startsWith('client-')) return;
+
+    const tabBtn = document.querySelector(`.tab[data-tab="${activePanel.id}"]`);
+    const name = tabBtn ? tabBtn.textContent : activePanel.id;
+
+    const entered = prompt(`Enter the password to permanently delete "${name}":`);
+    if(entered === null) return; // cancelled
+    if(entered !== 'RedRobot0099'){
+      alert('Incorrect password. Nothing was deleted.');
+      return;
+    }
+    if(!confirm(`This will permanently delete "${name}" for everyone. Are you sure?`)) return;
+
+    await deleteClient(activePanel.id);
+    if(tabBtn) tabBtn.remove();
+    activePanel.remove();
+    activateTab('editable');
+  }
+
   function saveAsNewClient(){
     const name = prompt("Name for this client's call flow:");
     if(!name) return;
@@ -1236,6 +1292,7 @@
     document.getElementById('tabs-bar').appendChild(tabBtn);
 
     document.getElementById('panels-container').appendChild(clone);
+    upgradeLegacyPracticeAreas(clone);
     wireStopHeads(clone);
     persistClient(id, name, clone.innerHTML);
 
@@ -1282,6 +1339,7 @@
         panel.setAttribute('contenteditable', 'true');
         panel.innerHTML = html;
         document.getElementById('panels-container').appendChild(panel);
+        upgradeLegacyPracticeAreas(panel);
         wireStopHeads(panel);
       }
     }catch(err){ console.error('Load error:', err); }
