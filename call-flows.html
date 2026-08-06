@@ -1194,7 +1194,30 @@
       });
     });
   }
+
+  // ---- Keep every open card sized to fit its content, no matter why it changed ----
+  // (image upload, typing, adding/removing rows, nested toggles opening — anything).
+  // Rather than recalculating height by hand after each individual action, this
+  // watches the actual rendered content and corrects the card's height whenever it
+  // changes, for any reason. This is the single source of truth for card sizing.
+  function observeCardSizing(root){
+    root.querySelectorAll('.stop-body-inner').forEach(inner=>{
+      if(inner._sizeObserved) return; // plain JS property, not a DOM attribute —
+      inner._sizeObserved = true;     // never persists into saved HTML, so restored
+      const body = inner.closest('.stop-body');   // panels always get freshly observed
+      const card = body && body.closest('.stop-card');
+      if(!body || !card) return;
+      const ro = new ResizeObserver(()=>{
+        if(card.classList.contains('open')){
+          body.style.maxHeight = body.scrollHeight + 'px';
+        }
+      });
+      ro.observe(inner);
+    });
+  }
+
   wireStopHeads(document);
+  observeCardSizing(document);
   isolateButtonEditing(document.getElementById('editable'));
 
   // Snapshot of the Editable tab's original content, taken before any edits happen,
@@ -1353,6 +1376,7 @@
     ensureClientFooter(clone);
     isolateButtonEditing(clone);
     wireStopHeads(clone);
+    observeCardSizing(clone);
     persistClient(id, name, clone.innerHTML);
 
     // Edits belong only to the newly saved client — put Editable back the way it started.
@@ -1402,6 +1426,7 @@
         ensureClientFooter(panel);
         isolateButtonEditing(panel);
         wireStopHeads(panel);
+        observeCardSizing(panel);
       }
     }catch(err){ console.error('Load error:', err); }
   }
