@@ -1119,6 +1119,26 @@
 
   // ---- Accordions, scoped so newly-cloned client panels get wired up too ----
   // ---- Retrofit older saved clients (saved before add/remove-practice-area existed) ----
+  // ---- Fix: buttons whose label is user-editable text (practice area names) were
+  // sitting directly inside the blanket-contenteditable panel. Retyping the label
+  // could collide with the button's own click/toggle behavior and delete the whole
+  // row. This carves each such button's text into its own small editable island,
+  // so the button click stays reliable and the label stays independently editable. ----
+  function isolateButtonEditing(root){
+    root.querySelectorAll('button').forEach(btn=>{
+      if(btn.dataset.isolated) return;
+      btn.dataset.isolated = 'true';
+      btn.setAttribute('contenteditable', 'false');
+      if(btn.classList.contains('subtoggle') && btn.children.length === 0){
+        const label = document.createElement('span');
+        label.setAttribute('contenteditable', 'true');
+        label.textContent = btn.textContent;
+        btn.textContent = '';
+        btn.appendChild(label);
+      }
+    });
+  }
+
   function upgradeLegacyPracticeAreas(panel){
     panel.querySelectorAll('ul.case-type-list').forEach(ul=>{
       const rows = Array.from(ul.children).filter(li=>li.classList.contains('case-type-row'));
@@ -1175,6 +1195,7 @@
     });
   }
   wireStopHeads(document);
+  isolateButtonEditing(document.getElementById('editable'));
 
   // Snapshot of the Editable tab's original content, taken before any edits happen,
   // so it can be restored after each save.
@@ -1240,6 +1261,7 @@
       </div>
     `;
     list.appendChild(li);
+    isolateButtonEditing(li);
 
     const body = btn.closest('.stop-body');
     if(body) body.style.maxHeight = body.scrollHeight + 'px';
@@ -1262,26 +1284,41 @@
 
   async function deleteClient(id){
     try{
-      await fetch('/api/clients?id=' + encodeURIComponent(id), {method:'DELETE'});
-    }catch(err){ console.error('Delete error:', err); }
+      const res = await fetch('/api/clients?id=' + encodeURIComponent(id), {method:'DELETE'});
+      if(!res.ok){
+        console.error('Delete failed, server responded:', res.status, await res.text());
+        return false;
+      }
+      return true;
+    }catch(err){
+      console.error('Delete error (network/fetch failed):', err);
+      return false;
+    }
   }
 
   async function deleteCurrentClient(){
     const activePanel = document.querySelector('.panel.active');
-    if(!activePanel || !activePanel.id.startsWith('client-')) return;
+    if(!activePanel || !activePanel.id.startsWith('client-')){
+      console.warn('Delete blocked: active panel is not a client tab.', activePanel && activePanel.id);
+      return;
+    }
 
     const tabBtn = document.querySelector(`.tab[data-tab="${activePanel.id}"]`);
     const name = tabBtn ? tabBtn.textContent : activePanel.id;
 
-    const entered = prompt(`Enter the password to permanently delete "${name}":`);
+    const entered = prompt(`Type the password to permanently delete "${name}":`);
     if(entered === null) return; // cancelled
-    if(entered !== 'RedRobot0099'){
+    if(entered.trim() !== 'RedRobot0099'){
       alert('Incorrect password. Nothing was deleted.');
       return;
     }
-    if(!confirm(`This will permanently delete "${name}" for everyone. Are you sure?`)) return;
 
-    await deleteClient(activePanel.id);
+    const ok = await deleteClient(activePanel.id);
+    if(!ok){
+      alert('Something went wrong deleting this on the server — it was NOT removed. Check the browser console for details.');
+      return;
+    }
+
     if(tabBtn) tabBtn.remove();
     activePanel.remove();
     activateTab('editable');
@@ -1314,6 +1351,7 @@
     document.getElementById('panels-container').appendChild(clone);
     upgradeLegacyPracticeAreas(clone);
     ensureClientFooter(clone);
+    isolateButtonEditing(clone);
     wireStopHeads(clone);
     persistClient(id, name, clone.innerHTML);
 
@@ -1362,6 +1400,7 @@
         document.getElementById('panels-container').appendChild(panel);
         upgradeLegacyPracticeAreas(panel);
         ensureClientFooter(panel);
+        isolateButtonEditing(panel);
         wireStopHeads(panel);
       }
     }catch(err){ console.error('Load error:', err); }
