@@ -1242,11 +1242,26 @@
     const container = input.closest('.map-upload');
     const box = container.querySelector('.map-upload-box');
     const img = container.querySelector('.map-image');
+
     const reader = new FileReader();
     reader.onload = (e)=>{
-      img.src = e.target.result;
-      img.style.display = 'block';
-      box.style.display = 'none';
+      // Downscale/recompress before storing — an uncompressed phone photo can be
+      // several MB, which pushes the saved payload past Vercel's request size
+      // limit and causes the save to silently fail. This keeps it small (usually
+      // well under 200KB) regardless of what was originally uploaded.
+      const temp = new Image();
+      temp.onload = ()=>{
+        const maxWidth = 1000;
+        const scale = Math.min(1, maxWidth / temp.width);
+        const canvas = document.createElement('canvas');
+        canvas.width = Math.round(temp.width * scale);
+        canvas.height = Math.round(temp.height * scale);
+        canvas.getContext('2d').drawImage(temp, 0, 0, canvas.width, canvas.height);
+        img.src = canvas.toDataURL('image/jpeg', 0.8);
+        img.style.display = 'block';
+        box.style.display = 'none';
+      };
+      temp.src = e.target.result;
     };
     reader.readAsDataURL(file);
   }
@@ -1301,8 +1316,15 @@
         headers: {'Content-Type': 'application/json'},
         body: JSON.stringify({id, name, html})
       });
-      if(!res.ok) console.error('Save failed:', await res.text());
-    }catch(err){ console.error('Save error:', err); }
+      if(!res.ok){
+        console.error('Save failed, server responded:', res.status, await res.text());
+        return false;
+      }
+      return true;
+    }catch(err){
+      console.error('Save error (network/fetch failed):', err);
+      return false;
+    }
   }
 
   async function deleteClient(id){
@@ -1347,7 +1369,7 @@
     activateTab('editable');
   }
 
-  function saveAsNewClient(){
+  async function saveAsNewClient(){
     const name = prompt("Name for this client's call flow:");
     if(!name) return;
     const id = 'client-' + slugify(name) + '-' + Date.now();
@@ -1377,7 +1399,16 @@
     isolateButtonEditing(clone);
     wireStopHeads(clone);
     observeCardSizing(clone);
-    persistClient(id, name, clone.innerHTML);
+
+    const ok = await persistClient(id, name, clone.innerHTML);
+    if(!ok){
+      // Roll back the tab we just created client-side — it never actually saved,
+      // so don't leave something visible that'll vanish next time the page loads.
+      tabBtn.remove();
+      clone.remove();
+      alert(`"${name}" could NOT be saved to the server. Nothing was lost — your edits are still here on this tab — but you'll need to try saving again. (Check the browser console for the exact error.)`);
+      return;
+    }
 
     // Edits belong only to the newly saved client — put Editable back the way it started.
     if(activePanel.id === 'editable'){
@@ -1388,18 +1419,26 @@
     activateTab(id);
   }
 
-  function saveEditsToClient(){
+  async function saveEditsToClient(){
     const activePanel = document.querySelector('.panel.active');
     if(!activePanel || !activePanel.id.startsWith('client-')) return;
     const id = activePanel.id;
     const tabBtn = document.querySelector(`.tab[data-tab="${id}"]`);
     const name = tabBtn ? tabBtn.textContent : id;
 
-    persistClient(id, name, activePanel.innerHTML);
-
     const btn = document.getElementById('save-edits-btn');
     const original = btn.textContent;
-    btn.textContent = 'Saved ✓';
+    btn.textContent = 'Saving…';
+
+    const ok = await persistClient(id, name, activePanel.innerHTML);
+
+    if(ok){
+      btn.textContent = 'Saved ✓';
+    } else {
+      btn.textContent = original;
+      alert(`Your edits to "${name}" could NOT be saved to the server. Your changes are still visible here on screen, but they have not been saved — try again. (Check the browser console for the exact error.)`);
+      return;
+    }
     setTimeout(()=>{ btn.textContent = original; }, 1500);
   }
 
