@@ -20,14 +20,27 @@ async function streamToJSON(stream) {
 export default async function handler(req, res) {
   try {
     if (req.method === 'GET') {
+      const { id } = req.query;
+
+      if (id) {
+        // Single-client fetch — used by the client-facing onboarding link, so
+        // that page's network response never contains any other client's data.
+        const result = await get(`clients/${id}.json`, { access: 'private' });
+        if (!result || result.statusCode !== 200) {
+          return res.status(404).json({ error: 'Not found' });
+        }
+        const data = await streamToJSON(result.stream);
+        return res.status(200).json({ id, name: data.name, html: data.html });
+      }
+
       const { blobs } = await list({ prefix: 'clients/' });
       const clients = await Promise.all(
         blobs.map(async (b) => {
           const result = await get(b.pathname, { access: 'private' });
           if (!result || result.statusCode !== 200) return null;
           const data = await streamToJSON(result.stream);
-          const id = b.pathname.replace(/^clients\//, '').replace(/\.json$/, '');
-          return { id, name: data.name, html: data.html };
+          const cid = b.pathname.replace(/^clients\//, '').replace(/\.json$/, '');
+          return { id: cid, name: data.name, html: data.html };
         })
       );
       return res.status(200).json(clients.filter(Boolean));

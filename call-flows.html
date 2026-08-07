@@ -448,7 +448,7 @@
     text-align:right;
     margin-top:56px;
   }
-  .client-footer .new-client-btn{display:inline-flex;}
+  .client-footer .new-client-btn{display:inline-flex;margin-left:10px;}
   #editable .client-footer{display:none;}
 
   .subtabs{
@@ -558,10 +558,57 @@
     .onboard-section{border:1px solid #ccc;break-inside:avoid;}
     .field-box{border:1px solid #999;}
   }
+  #client-view .cv-eyebrow{
+    font-family:'IBM Plex Mono',monospace;
+    font-size:12px;
+    letter-spacing:.14em;
+    text-transform:uppercase;
+    color:var(--line);
+    font-weight:600;
+    margin-bottom:10px;
+  }
+  #client-view h1{
+    font-family:'Space Grotesk',sans-serif;
+    font-size:clamp(26px,3.6vw,36px);
+    font-weight:700;
+    margin:0 0 12px;
+  }
+  #client-view .cv-intro{
+    color:var(--ink-soft);
+    font-size:15px;
+    max-width:60ch;
+    margin:0 0 32px;
+  }
+  #client-view .cv-status{
+    font-family:'IBM Plex Mono',monospace;
+    font-size:13px;
+    padding:12px 16px;
+    border-radius:8px;
+    margin-bottom:24px;
+  }
+  #client-view .cv-status.error{background:var(--dq-bg);color:var(--dq);}
+  #client-view .cv-status.success{background:var(--hot-bg);color:var(--hot);}
+  #client-view .cv-submit-btn{
+    display:block;
+    margin:32px 0 0;
+    font-family:'IBM Plex Mono',monospace;
+    font-size:13.5px;
+    font-weight:700;
+    padding:13px 22px;
+    border-radius:8px;
+    border:none;
+    background:var(--ink);
+    color:var(--paper);
+    cursor:pointer;
+  }
+  #client-view .cv-submit-btn:hover{background:#2a3646;}
+  #client-view .cv-submit-btn:disabled{opacity:.5;cursor:default;}
 </style>
 </head>
 <body>
 <div class="wrap">
+
+  <div id="client-view" style="display:none;"></div>
 
   <header class="top">
     <div class="eyebrow">Aurelian™ · Intake Script Framework</div>
@@ -1167,6 +1214,7 @@
       </div>
 
     <div class="client-footer">
+      <button class="new-client-btn" onclick="copyClientLink(this)">Copy Client Link</button>
       <button class="new-client-btn danger" onclick="deleteCurrentClient()">Delete This Client</button>
     </div>
 
@@ -1562,11 +1610,22 @@
 
   // ---- Retrofit older saved clients that predate the delete-client footer ----
   function ensureClientFooter(panel){
-    if(panel.querySelector('.client-footer')) return;
-    const footer = document.createElement('div');
-    footer.className = 'client-footer';
-    footer.innerHTML = '<button class="new-client-btn danger" onclick="deleteCurrentClient()">Delete This Client</button>';
-    panel.appendChild(footer);
+    let footer = panel.querySelector('.client-footer');
+    if(!footer){
+      footer = document.createElement('div');
+      footer.className = 'client-footer';
+      footer.innerHTML = '<button class="new-client-btn" onclick="copyClientLink(this)">Copy Client Link</button><button class="new-client-btn danger" onclick="deleteCurrentClient()">Delete This Client</button>';
+      panel.appendChild(footer);
+      return;
+    }
+    // Older client already has a footer (from before Copy Client Link existed) — add it in.
+    if(!footer.querySelector('.new-client-btn:not(.danger)')){
+      const copyBtn = document.createElement('button');
+      copyBtn.className = 'new-client-btn';
+      copyBtn.setAttribute('onclick', 'copyClientLink(this)');
+      copyBtn.textContent = 'Copy Client Link';
+      footer.insertBefore(copyBtn, footer.firstChild);
+    }
   }
 
   function wireStopHeads(root){
@@ -1607,15 +1666,23 @@
     });
   }
 
-  wireStopHeads(document);
-  observeCardSizing(document);
-  document.getElementById('template-onboarding').innerHTML = buildOnboardingFormHTML(false);
-  document.getElementById('editable-onboarding').innerHTML = buildOnboardingFormHTML(true);
-  isolateButtonEditing(document.getElementById('editable'));
+  // ---- Detect the client-facing (?client=ID) view vs the normal internal tool ----
+  function getClientId(){
+    return new URLSearchParams(location.search).get('client');
+  }
+  let pristineEditableHTML; // populated below, only in the internal-tool branch
 
-  // Snapshot of the Editable tab's original content, taken before any edits happen,
-  // so it can be restored after each save.
-  const pristineEditableHTML = document.getElementById('editable').innerHTML;
+  if(!getClientId()){
+    wireStopHeads(document);
+    observeCardSizing(document);
+    document.getElementById('template-onboarding').innerHTML = buildOnboardingFormHTML(false);
+    document.getElementById('editable-onboarding').innerHTML = buildOnboardingFormHTML(true);
+    isolateButtonEditing(document.getElementById('editable'));
+
+    // Snapshot of the Editable tab's original content, taken before any edits happen,
+    // so it can be restored after each save.
+    pristineEditableHTML = document.getElementById('editable').innerHTML;
+  }
 
   // ---- Save current tab as a new client (persisted via /api/clients on Vercel) ----
   // ---- Map image upload (stored as a data URI, saved along with the rest of the client's HTML) ----
@@ -1731,6 +1798,26 @@
     }catch(err){
       console.error('Delete error (network/fetch failed):', err);
       return false;
+    }
+  }
+
+  function copyClientLink(btn){
+    const activePanel = document.querySelector('.panel.active');
+    if(!activePanel || !activePanel.id.startsWith('client-')) return;
+    const url = `${location.origin}${location.pathname}?client=${encodeURIComponent(activePanel.id)}`;
+
+    const finish = (label)=>{
+      const original = btn.textContent;
+      btn.textContent = label;
+      setTimeout(()=>{ btn.textContent = original; }, 1800);
+    };
+
+    if(navigator.clipboard && navigator.clipboard.writeText){
+      navigator.clipboard.writeText(url).then(()=>finish('Copied ✓')).catch(()=>{
+        prompt('Copy this link:', url);
+      });
+    } else {
+      prompt('Copy this link:', url);
     }
   }
 
@@ -1866,7 +1953,102 @@
       }
     }catch(err){ console.error('Load error:', err); }
   }
-  restoreSavedClients();
+
+  // ---- Client-facing view: shows only ONE client's onboarding form, nothing else ----
+  async function initClientView(id){
+    document.querySelector('header.top').style.display = 'none';
+    document.querySelector('.tabs-row').style.display = 'none';
+    document.getElementById('panels-container').style.display = 'none';
+    const footer = document.querySelector('body > footer');
+    if(footer) footer.style.display = 'none';
+
+    const view = document.getElementById('client-view');
+    view.style.display = 'block';
+    view.innerHTML = `
+      <div class="cv-eyebrow">Aurelian™ · Onboarding</div>
+      <h1>Loading your onboarding form…</h1>
+    `;
+
+    let record;
+    try{
+      const res = await fetch('/api/clients?id=' + encodeURIComponent(id));
+      if(!res.ok) throw new Error('not found');
+      record = await res.json();
+    }catch(err){
+      view.innerHTML = `
+        <div class="cv-eyebrow">Aurelian™ · Onboarding</div>
+        <h1>Link not found</h1>
+        <div class="cv-status error">This link isn't valid, or the form has been removed. Please check with Back Office Betties for the correct link.</div>
+      `;
+      return;
+    }
+
+    // Parse the client's full saved record (Call Intake Flow + Onboarding Questions
+    // together) into a detached container. We only ever show the onboarding half —
+    // the full structure is kept in memory so that saving back never touches or
+    // overwrites the internal call-flow script.
+    const fullDoc = document.createElement('div');
+    fullDoc.innerHTML = record.html;
+    const onboardingSource = fullDoc.querySelector('[data-subtab-content="onboarding"]');
+
+    view.innerHTML = `
+      <div class="cv-eyebrow">Aurelian™ · Onboarding</div>
+      <h1>${record.name}</h1>
+      <div class="cv-intro">Please fill out the questions below so we can set up your call handling correctly. You can save your progress and come back later using this same link.</div>
+      <div id="cv-form-holder"></div>
+      <button class="cv-submit-btn" id="cv-submit-btn" onclick="submitClientOnboarding('${id}')">Save My Answers</button>
+      <div id="cv-status-holder"></div>
+    `;
+
+    const holder = document.getElementById('cv-form-holder');
+    if(onboardingSource){
+      holder.innerHTML = onboardingSource.innerHTML;
+      holder.setAttribute('contenteditable', 'true');
+      isolateButtonEditing(holder);
+    } else {
+      holder.innerHTML = '<div class="cv-status error">This form could not be loaded correctly. Please contact Back Office Betties.</div>';
+    }
+
+    // Stash the full parsed document so the submit handler can splice edits
+    // back into it without disturbing the Call Intake Flow content.
+    window._cvFullDoc = fullDoc;
+    window._cvRecordName = record.name;
+  }
+
+  async function submitClientOnboarding(id){
+    const btn = document.getElementById('cv-submit-btn');
+    const statusHolder = document.getElementById('cv-status-holder');
+    const holder = document.getElementById('cv-form-holder');
+    const fullDoc = window._cvFullDoc;
+    if(!fullDoc){
+      statusHolder.innerHTML = '<div class="cv-status error">Something went wrong — please refresh the page and try again.</div>';
+      return;
+    }
+
+    const target = fullDoc.querySelector('[data-subtab-content="onboarding"]');
+    if(target) target.innerHTML = holder.innerHTML;
+
+    btn.disabled = true;
+    btn.textContent = 'Saving…';
+
+    const ok = await persistClient(id, window._cvRecordName, fullDoc.innerHTML);
+
+    btn.disabled = false;
+    if(ok){
+      btn.textContent = 'Save My Answers';
+      statusHolder.innerHTML = '<div class="cv-status success">Saved. You can close this page or keep editing — just click Save again after any changes.</div>';
+    }else{
+      btn.textContent = 'Save My Answers';
+      statusHolder.innerHTML = '<div class="cv-status error">This could not be saved — please check your connection and try again.</div>';
+    }
+  }
+
+  const _clientId = getClientId();
+  if(_clientId){
+    initClientView(_clientId);
+  } else {
+    restoreSavedClients();
+  }
 </script>
 </body>
 </html>
