@@ -451,6 +451,80 @@
   .client-footer .new-client-btn{display:inline-flex;}
   #editable .client-footer{display:none;}
 
+  .subtabs{
+    display:flex;
+    gap:2px;
+    border:1px solid var(--rule);
+    border-radius:8px;
+    padding:3px;
+    width:fit-content;
+    background:var(--card);
+    margin-bottom:28px;
+  }
+  .subtab{
+    font-family:'IBM Plex Mono',monospace;
+    font-size:12px;
+    font-weight:600;
+    padding:7px 14px;
+    border-radius:6px;
+    border:none;
+    background:transparent;
+    color:var(--ink-soft);
+    cursor:pointer;
+  }
+  .subtab.active{background:var(--ink);color:var(--paper);}
+  .subtab-panel{display:none;}
+  .subtab-panel.active{display:block;}
+
+  .onboard-section{
+    background:var(--card);
+    border:1px solid var(--rule);
+    border-radius:12px;
+    margin-bottom:12px;
+    overflow:hidden;
+  }
+  .onboard-section-head{
+    width:100%;
+    padding:14px 18px;
+    font-family:'Space Grotesk',sans-serif;
+    font-weight:600;
+    font-size:15px;
+    color:var(--ink);
+  }
+  .onboard-section-body{
+    display:block;
+    padding:0 18px 18px;
+    border-top:1px solid var(--rule);
+    padding-top:16px;
+  }
+
+  .onboard-field{margin-bottom:16px;max-width:640px;}
+  .onboard-field label{
+    display:block;
+    font-weight:600;
+    font-size:13.5px;
+    color:var(--ink);
+    margin-bottom:6px;
+    line-height:1.4;
+  }
+  .field-box{
+    width:100%;
+    border:1px solid var(--rule);
+    border-radius:6px;
+    background:var(--card);
+    padding:10px 12px;
+    font-size:13.5px;
+    line-height:1.4;
+    min-height:2.4em;
+    margin-bottom:12px;
+    cursor:text;
+  }
+  .onboard-field .field-box{max-width:640px;}
+  .onboard-field .field-box:not([contenteditable]){
+    opacity:.45;
+    cursor:not-allowed;
+  }
+
   .call-header{margin-bottom:24px;}
   .call-header label{
     display:block;
@@ -460,16 +534,29 @@
     color:var(--ink-soft);
     margin:0 0 4px;
   }
-  .call-header .field-box{
-    width:100%;
-    max-width:420px;
-    border:1px solid var(--rule);
-    border-radius:6px;
-    background:var(--card);
-    padding:6px 10px;
-    font-size:13.5px;
-    min-height:1.1em;
-    margin-bottom:12px;
+  .call-header .field-box{max-width:420px;}
+  .export-pdf-btn{
+    display:block;
+    margin:0 0 24px auto;
+    font-family:'IBM Plex Mono',monospace;
+    font-size:12.5px;
+    font-weight:700;
+    padding:10px 16px;
+    border-radius:8px;
+    border:1px solid var(--line);
+    background:none;
+    color:var(--line);
+    cursor:pointer;
+  }
+  .export-pdf-btn:hover{background:var(--line);color:#fff;}
+
+  @media print{
+    .tabs-row, .subtabs, .export-pdf-btn, .client-footer, header.top{display:none !important;}
+    .subtab-panel:not(.active){display:none !important;}
+    body{background:#fff;}
+    .wrap{padding:0;max-width:100%;}
+    .onboard-section{border:1px solid #ccc;break-inside:avoid;}
+    .field-box{border:1px solid #999;}
   }
 </style>
 </head>
@@ -493,6 +580,12 @@
   <div id="panels-container">
   <!-- ============ ROUTER ============ -->
   <div class="panel active" id="template">
+    <div class="subtabs">
+      <button class="subtab active" data-subtab="flow" onclick="activateSubTab(this)">Call Intake Flow</button>
+      <button class="subtab" data-subtab="onboarding" onclick="activateSubTab(this)">Onboarding Questions</button>
+    </div>
+
+    <div class="subtab-panel active" data-subtab-content="flow">
 
 
     <div class="call-header">
@@ -848,10 +941,19 @@
       </div>
 
     </div>
+    </div>
+
+    <div class="subtab-panel" data-subtab-content="onboarding" id="template-onboarding"></div>
   </div>
 
 
   <div class="panel" id="editable" contenteditable="true">
+    <div class="subtabs">
+      <button class="subtab active" data-subtab="flow" onclick="activateSubTab(this)">Call Intake Flow</button>
+      <button class="subtab" data-subtab="onboarding" onclick="activateSubTab(this)">Onboarding Questions</button>
+    </div>
+
+    <div class="subtab-panel active" data-subtab-content="flow">
 
 
     <div class="call-header">
@@ -1069,6 +1171,9 @@
     </div>
 
     </div>
+    </div>
+
+    <div class="subtab-panel" data-subtab-content="onboarding" id="editable-onboarding"></div>
   </div>
 
   </div>
@@ -1081,6 +1186,292 @@
 
 <script>
   // ---- Tabs (event delegation so dynamically-added client tabs work too) ----
+  const ONBOARDING_FIELDS = [
+  [
+    "How You Heard About Us",
+    [
+      "How did you hear about us?",
+      "What did you search for?",
+      "Who referred you to us?",
+      "Was it through a Facebook group or ad?",
+      "Which podcast?",
+      "Other - Please specify"
+    ]
+  ],
+  [
+    "Getting Started",
+    [
+      "When would you like to start services?"
+    ]
+  ],
+  [
+    "Primary Contact",
+    [
+      "First & Last Name:",
+      "Phone Number:",
+      "Email Address:",
+      "Job Title:",
+      "Do you speak any other languages than English?",
+      "How would you like to receive your messages?",
+      "Is the above phone number where you would like to receive text messages?",
+      "What phone number should we send text messages to?"
+    ]
+  ],
+  [
+    "Law Firm Information",
+    [
+      "Law Firm Name:",
+      "Law Firm Main Phone Number:",
+      "Who is your phone provider?",
+      "Fax Number:",
+      "Main Email Address:",
+      "Website:",
+      "Do you have additional locations?",
+      "Main Firm Address:",
+      "Please list additional locations:",
+      "Can we share your address with callers?",
+      "Are there any directions or landmarks you want us to provide to callers? Are there any special parking instructions?",
+      "What are your business hours?",
+      "Are you available for transfers during your business hours? If not, please specify what hours we should attempt to transfer calls.",
+      "What time zone are you in?",
+      "What types of cases does your firm handle?",
+      "Any additional notes?"
+    ]
+  ],
+  [
+    "Greeting",
+    [
+      "What greeting would you like us to use when we answer?",
+      "What custom greeting would you like us to use?"
+    ]
+  ],
+  [
+    "Payments",
+    [
+      "Can client stop by your office to drop off documents or payments?",
+      "How should we handle a caller wanting to make a payment?",
+      "Please provide your payment link:",
+      "Who should we transfer the call to for payments?",
+      "Who should we send the message to for payments?",
+      "Which voicemail box should we send payment calls to?",
+      "If other, please specify."
+    ]
+  ],
+  [
+    "Solicitations",
+    [
+      "How should we handle solicitation calls?",
+      "Who should we transfer the solicitation call to?",
+      "Who should we send solicitation messages to?",
+      "Which voicemail box should we send solicitation calls to?"
+    ]
+  ],
+  [
+    "Judgment Calls",
+    [
+      "Sometimes our team needs to make \"judgment calls\" and go outside of regular call handling. Is this okay?"
+    ]
+  ],
+  [
+    "Consultations & Fees",
+    [
+      "When a caller asks about consultations, what should we tell them regarding fees, locations, etc.?"
+    ]
+  ],
+  [
+    "Spanish-Speaking Callers",
+    [
+      "Often times Spanish-speaking callers want to know how you work with them. What should we tell them? (We offer bilingual services!)",
+      "Please provide further instructions for Spanish speakers:"
+    ]
+  ],
+  [
+    "Experience & Pricing",
+    [
+      "How long have you been practicing law?",
+      "If a caller asks for ballpark pricing, how should we respond?"
+    ]
+  ],
+  [
+    "Voicemail",
+    [
+      "What email(s) would you like us to send voicemails to?"
+    ]
+  ],
+  [
+    "Scheduling",
+    [
+      "Do you want us to schedule calls for you?",
+      "What scheduling links should we use to schedule callers?",
+      "How would you like us to handle anyone needing to cancel or reschedule an appointment?",
+      "Who should we transfer cancellation and rescheduling calls to?",
+      "Who should we send the cancellation or rescheduling message to?",
+      "Which voicemail box should we send cancellation or rescheduling calls to?",
+      "If other, please specify."
+    ]
+  ],
+  [
+    "Outbound Calls",
+    [
+      "Will you be utilizing our services to complete outbound calls?",
+      "Additional notes:"
+    ]
+  ],
+  [
+    "Clio Grow Integration",
+    [
+      "Would you like us to integrate with your Clio Grow account?",
+      "Please provide your Clio Grow Lead Capture Token:"
+    ]
+  ],
+  [
+    "New Client Calls",
+    [
+      "How should we handle new client calls?",
+      "Please provide direct scheduling links for each appointment type.",
+      "Who should we attempt to transfer the new client to?",
+      "Who should we send the new client message to?",
+      "Outside of name, email, phone number, case type, case notes, and referral source; is there any other information you would like us to obtain from new callers if we are sending you a message?",
+      "How would you like us to handle callers with a case type that is outside of your practice area?",
+      "Who should we send \"other\" potential new client messages to?",
+      "If other, please specify.",
+      "Is there anything else you would like us to know regarding potential new client calls?"
+    ]
+  ],
+  [
+    "Team Member Routing",
+    [
+      "When a caller asks for a team member by name, we should:",
+      "If there is no answer, we should:",
+      "Is there any other specific instructions for team member routing you would like us to follow?",
+      "How many people are working at your law firm?"
+    ]
+  ],
+  [
+    "Team Member 2",
+    [
+      "Full Name:",
+      "Ms./Mr.:",
+      "Job Title:",
+      "Phone Number:",
+      "Email Address:",
+      "Do they speak any languages other than English?",
+      "How would they like their messages to be delivered?",
+      "Is the above phone number where we can send text messages?",
+      "Please provide the phone number where we can send text messages:"
+    ]
+  ],
+  [
+    "Team Member 3",
+    [
+      "Full Name:",
+      "Ms./Mr.:",
+      "Job Title:",
+      "Phone Number:",
+      "Email Address:",
+      "Do they speak any languages other than English?",
+      "How would they like their messages to be delivered?",
+      "Is the above phone number where we can send text messages?",
+      "Please provide the phone number where we can send text messages:"
+    ]
+  ],
+  [
+    "Team Member 4",
+    [
+      "Full Name:",
+      "Ms./Mr.:",
+      "Job Title:",
+      "Phone Number:",
+      "Email Address:",
+      "Do they speak any languages other than English?",
+      "How would they like their messages to be delivered?",
+      "Is the above phone number where we can send text messages?",
+      "Please provide the phone number where we can send text messages:"
+    ]
+  ],
+  [
+    "Final",
+    [
+      "Who is authorized to make changes to the account?",
+      "Is there anything else you would like us to know?"
+    ]
+  ]
+];
+
+  // ---- Build the onboarding form HTML from ONBOARDING_FIELDS ----
+  function buildOnboardingFormHTML(editable){
+    const ce = editable ? ' contenteditable="true"' : '';
+    let html = '<button class="export-pdf-btn" contenteditable="false" onclick="exportOnboardingPDF(this)">⤓ Export as PDF</button>';
+    ONBOARDING_FIELDS.forEach(([section, questions])=>{
+      html += `<div class="onboard-section">`;
+      html += `<div class="onboard-section-head" contenteditable="false"><span>${section}</span></div>`;
+      html += `<div class="onboard-section-body">`;
+      questions.forEach(q=>{
+        html += `<div class="onboard-field"><label contenteditable="false">${q}</label><div class="editable field-box"${ce}></div></div>`;
+      });
+      html += `</div></div>`;
+    });
+    return html;
+  }
+
+  // ---- Sub-tab switching (Call Intake Flow / Onboarding Questions), scoped per panel ----
+  // ---- Export the onboarding form as a PDF via the browser's native print-to-PDF ----
+  function exportOnboardingPDF(btn){
+    const panel = btn.closest('.panel');
+    const tabBtn = document.querySelector(`.tab[data-tab="${panel.id}"]`);
+    const name = tabBtn ? tabBtn.textContent : 'Onboarding';
+    const originalTitle = document.title;
+    document.title = `${name} — Onboarding Questions`;
+    window.print();
+    document.title = originalTitle;
+  }
+
+  function activateSubTab(btn){
+    const panel = btn.closest('.panel');
+    const subtab = btn.dataset.subtab;
+    panel.querySelectorAll(':scope > .subtabs > .subtab').forEach(t=>t.classList.toggle('active', t===btn));
+    panel.querySelectorAll(':scope > .subtab-panel').forEach(v=>v.classList.toggle('active', v.dataset.subtabContent===subtab));
+  }
+
+  // ---- Retrofit older saved clients that predate the sub-tab structure ----
+  function upgradeLegacySubTabs(panel){
+    if(panel.querySelector(':scope > .subtabs')) return;
+
+    const existingChildren = Array.from(panel.children);
+
+    const subtabs = document.createElement('div');
+    subtabs.className = 'subtabs';
+    subtabs.innerHTML = `
+      <button class="subtab active" data-subtab="flow" onclick="activateSubTab(this)">Call Intake Flow</button>
+      <button class="subtab" data-subtab="onboarding" onclick="activateSubTab(this)">Onboarding Questions</button>
+    `;
+
+    const flowView = document.createElement('div');
+    flowView.className = 'subtab-panel active';
+    flowView.dataset.subtabContent = 'flow';
+    existingChildren.forEach(child=>flowView.appendChild(child));
+
+    const onboardingView = document.createElement('div');
+    onboardingView.className = 'subtab-panel';
+    onboardingView.dataset.subtabContent = 'onboarding';
+    onboardingView.innerHTML = buildOnboardingFormHTML(true);
+
+    panel.appendChild(subtabs);
+    panel.appendChild(flowView);
+    panel.appendChild(onboardingView);
+  }
+
+  function ensureExportButton(panel){
+    const onboardingView = panel.querySelector('[data-subtab-content="onboarding"]');
+    if(!onboardingView || onboardingView.querySelector('.export-pdf-btn')) return;
+    const btn = document.createElement('button');
+    btn.className = 'export-pdf-btn';
+    btn.setAttribute('contenteditable', 'false');
+    btn.setAttribute('onclick', 'exportOnboardingPDF(this)');
+    btn.textContent = '⤓ Export as PDF';
+    onboardingView.insertBefore(btn, onboardingView.firstChild);
+  }
+
   function activateTab(name){
     document.querySelectorAll('.tab').forEach(t=>t.classList.toggle('active', t.dataset.tab===name));
     document.querySelectorAll('.panel').forEach(p=>p.classList.toggle('active', p.id===name));
@@ -1218,6 +1609,8 @@
 
   wireStopHeads(document);
   observeCardSizing(document);
+  document.getElementById('template-onboarding').innerHTML = buildOnboardingFormHTML(false);
+  document.getElementById('editable-onboarding').innerHTML = buildOnboardingFormHTML(true);
   isolateButtonEditing(document.getElementById('editable'));
 
   // Snapshot of the Editable tab's original content, taken before any edits happen,
@@ -1395,6 +1788,8 @@
 
     document.getElementById('panels-container').appendChild(clone);
     upgradeLegacyPracticeAreas(clone);
+    upgradeLegacySubTabs(clone);
+    ensureExportButton(clone);
     ensureClientFooter(clone);
     isolateButtonEditing(clone);
     wireStopHeads(clone);
@@ -1462,6 +1857,8 @@
         panel.innerHTML = html;
         document.getElementById('panels-container').appendChild(panel);
         upgradeLegacyPracticeAreas(panel);
+        upgradeLegacySubTabs(panel);
+        ensureExportButton(panel);
         ensureClientFooter(panel);
         isolateButtonEditing(panel);
         wireStopHeads(panel);
