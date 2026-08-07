@@ -556,7 +556,7 @@
     body{background:#fff;}
     .wrap{padding:0;max-width:100%;}
     .onboard-section{border:1px solid #ccc;break-inside:avoid;}
-    .field-box{border:1px solid #999;}
+    .field-box, textarea.cv-answer{border:1px solid #999;}
   }
   #client-view .cv-eyebrow{
     font-family:'IBM Plex Mono',monospace;
@@ -603,6 +603,27 @@
   }
   #client-view .cv-submit-btn:hover{background:#2a3646;}
   #client-view .cv-submit-btn:disabled{opacity:.5;cursor:default;}
+  #client-view textarea.cv-answer{
+    display:block;
+    width:100%;
+    max-width:640px;
+    border:1px solid var(--rule);
+    border-radius:6px;
+    background:var(--card);
+    padding:10px 12px;
+    font-family:inherit;
+    font-size:13.5px;
+    line-height:1.4;
+    color:var(--ink);
+    resize:none;
+    overflow:hidden;
+    min-height:2.4em;
+    margin-bottom:16px;
+  }
+  #client-view textarea.cv-answer:focus{
+    outline:none;
+    border-color:var(--line);
+  }
 </style>
 </head>
 <body>
@@ -1955,6 +1976,11 @@
   }
 
   // ---- Client-facing view: shows only ONE client's onboarding form, nothing else ----
+  function autoResizeTextarea(ta){
+    ta.style.height = 'auto';
+    ta.style.height = ta.scrollHeight + 'px';
+  }
+
   async function initClientView(id){
     document.querySelector('header.top').style.display = 'none';
     document.querySelector('.tabs-row').style.display = 'none';
@@ -2008,8 +2034,21 @@
     const holder = document.getElementById('cv-form-holder');
     if(onboardingSource){
       holder.innerHTML = onboardingSource.innerHTML;
-      holder.setAttribute('contenteditable', 'true');
-      isolateButtonEditing(holder);
+      // Swap every answer box from a contenteditable div to a real <textarea>.
+      // A contenteditable div here would let Backspace or a pasted block of text
+      // bleed into the label above it or the field below it — a real form field
+      // is structurally isolated from the surrounding page, so that can't happen.
+      holder.querySelectorAll('.field-box').forEach(box=>{
+        const ta = document.createElement('textarea');
+        ta.className = 'cv-answer';
+        ta.rows = 1;
+        ta.value = box.textContent.trim();
+        ta.addEventListener('input', ()=>autoResizeTextarea(ta));
+        box.replaceWith(ta);
+        autoResizeTextarea(ta);
+      });
+      // Nothing left in here needs contenteditable protection since nothing is editable anymore.
+      holder.querySelectorAll('[contenteditable]').forEach(el=>el.removeAttribute('contenteditable'));
     } else {
       holder.innerHTML = '<div class="cv-status error">This form could not be loaded correctly. Please contact Back Office Betties.</div>';
     }
@@ -2031,7 +2070,18 @@
     }
 
     const target = fullDoc.querySelector('[data-subtab-content="onboarding"]');
-    if(target) target.innerHTML = holder.innerHTML;
+    if(target){
+      // Write each textarea's current value back into the matching field-box div
+      // in the full saved structure (matched by order — both are generated from
+      // the same field list, so the order always lines up). textContent assignment
+      // is used rather than innerHTML, so nothing a client types or pastes can
+      // ever be interpreted as HTML.
+      const liveAnswers = holder.querySelectorAll('textarea.cv-answer');
+      const targetBoxes = target.querySelectorAll('.field-box');
+      liveAnswers.forEach((ta, i)=>{
+        if(targetBoxes[i]) targetBoxes[i].textContent = ta.value;
+      });
+    }
 
     btn.disabled = true;
     btn.textContent = 'Saving…';
