@@ -1989,6 +1989,11 @@
     // overwrites the internal call-flow script.
     const fullDoc = document.createElement('div');
     fullDoc.innerHTML = record.html;
+
+    // Clients saved before the Onboarding Questions sub-tab existed won't have this
+    // structure yet — patch it in on the fly, same retrofit the internal tool uses.
+    upgradeLegacySubTabs(fullDoc);
+
     const onboardingSource = fullDoc.querySelector('[data-subtab-content="onboarding"]');
 
     view.innerHTML = `
