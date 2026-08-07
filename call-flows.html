@@ -552,6 +552,7 @@
 
   @media print{
     .tabs-row, .subtabs, .export-pdf-btn, .client-footer, header.top{display:none !important;}
+    .cv-submit-btn, #cv-status-holder{display:none !important;}
     .subtab-panel:not(.active){display:none !important;}
     body{background:#fff;}
     .wrap{padding:0;max-width:100%;}
@@ -1487,8 +1488,14 @@
   // ---- Export the onboarding form as a PDF via the browser's native print-to-PDF ----
   function exportOnboardingPDF(btn){
     const panel = btn.closest('.panel');
-    const tabBtn = document.querySelector(`.tab[data-tab="${panel.id}"]`);
-    const name = tabBtn ? tabBtn.textContent : 'Onboarding';
+    let name = 'Onboarding';
+    if(panel){
+      const tabBtn = document.querySelector(`.tab[data-tab="${panel.id}"]`);
+      name = tabBtn ? tabBtn.textContent : panel.id;
+    } else if(window._cvRecordName){
+      // Client-facing view — there's no .panel here, use the name stashed by initClientView.
+      name = window._cvRecordName;
+    }
     const originalTitle = document.title;
     document.title = `${name} — Onboarding Questions`;
     window.print();
