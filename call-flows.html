@@ -1469,19 +1469,66 @@
 ];
 
   // ---- Build the onboarding form HTML from ONBOARDING_FIELDS ----
-  function buildOnboardingFormHTML(editable){
+  function buildOnboardingFormHTML(editable, defaults){
     const ce = editable ? ' contenteditable="true"' : '';
     let html = '<button class="export-pdf-btn" contenteditable="false" onclick="exportOnboardingPDF(this)">⤓ Export as PDF</button>';
+    let i = 0;
     ONBOARDING_FIELDS.forEach(([section, questions])=>{
       html += `<div class="onboard-section">`;
       html += `<div class="onboard-section-head" contenteditable="false"><span>${section}</span></div>`;
       html += `<div class="onboard-section-body">`;
       questions.forEach(q=>{
-        html += `<div class="onboard-field"><label contenteditable="false">${q}</label><div class="editable field-box"${ce}></div></div>`;
+        const val = (defaults && defaults[i] != null) ? escapeHTML(defaults[i]) : '';
+        i++;
+        html += `<div class="onboard-field"><label contenteditable="false">${q}</label><div class="editable field-box"${ce}>${val}</div></div>`;
       });
       html += `</div></div>`;
     });
     return html;
+  }
+
+  function escapeHTML(str){
+    const d = document.createElement('div');
+    d.textContent = str;
+    return d.innerHTML;
+  }
+
+  // Pull the current answer values out of a rendered onboarding container, in
+  // the same field order ONBOARDING_FIELDS produces them in.
+  function extractOnboardingValues(container){
+    return Array.from(container.querySelectorAll('.field-box')).map(box=>box.textContent.trim());
+  }
+
+  async function fetchMasterTemplateDefaults(){
+    try{
+      const res = await fetch('/api/clients?id=master-template-defaults');
+      if(!res.ok) return [];
+      const record = await res.json();
+      const temp = document.createElement('div');
+      temp.innerHTML = record.html;
+      return extractOnboardingValues(temp);
+    }catch(err){
+      console.error('Could not load master template defaults:', err);
+      return [];
+    }
+  }
+
+  async function saveMasterTemplateDefaults(btn){
+    const container = document.getElementById('template-onboarding');
+    const original = btn.textContent;
+    btn.textContent = 'Saving…';
+    btn.disabled = true;
+
+    const ok = await persistClient('master-template-defaults', 'Master Template Defaults', container.innerHTML);
+
+    btn.disabled = false;
+    if(!ok){
+      btn.textContent = original;
+      alert('Could not save the defaults — check the browser console and try again.');
+      return;
+    }
+    btn.textContent = 'Saved ✓';
+    setTimeout(()=>{ btn.textContent = original; }, 1800);
   }
 
   // ---- Sub-tab switching (Call Intake Flow / Onboarding Questions), scoped per panel ----
@@ -1703,13 +1750,25 @@
   if(!getClientId()){
     wireStopHeads(document);
     observeCardSizing(document);
-    document.getElementById('template-onboarding').innerHTML = buildOnboardingFormHTML(false);
-    document.getElementById('editable-onboarding').innerHTML = buildOnboardingFormHTML(true);
-    isolateButtonEditing(document.getElementById('editable'));
 
-    // Snapshot of the Editable tab's original content, taken before any edits happen,
-    // so it can be restored after each save.
-    pristineEditableHTML = document.getElementById('editable').innerHTML;
+    fetchMasterTemplateDefaults().then(defaults=>{
+      document.getElementById('template-onboarding').innerHTML = buildOnboardingFormHTML(true, defaults);
+      const saveDefaultsBtn = document.createElement('button');
+      saveDefaultsBtn.className = 'export-pdf-btn';
+      saveDefaultsBtn.setAttribute('contenteditable', 'false');
+      saveDefaultsBtn.textContent = '💾 Save as Default for New Clients';
+      saveDefaultsBtn.setAttribute('onclick', 'saveMasterTemplateDefaults(this)');
+      const templateOnboarding = document.getElementById('template-onboarding');
+      templateOnboarding.insertBefore(saveDefaultsBtn, templateOnboarding.firstChild);
+
+      document.getElementById('editable-onboarding').innerHTML = buildOnboardingFormHTML(true, defaults);
+      isolateButtonEditing(document.getElementById('editable'));
+
+      // Snapshot of the Editable tab's original content, taken before any edits happen,
+      // so it can be restored after each save. Taken here (post-defaults) so a fresh
+      // "Create New Client" always resets back to the defaults, not to blank.
+      pristineEditableHTML = document.getElementById('editable').innerHTML;
+    });
   }
 
   // ---- Save current tab as a new client (persisted via /api/clients on Vercel) ----
@@ -1959,6 +2018,7 @@
       if(!res.ok) return;
       const clients = await res.json();
       for(const {id, name, html} of clients){
+        if(id === 'master-template-defaults') continue; // reserved record, not a real client
         const tabBtn = document.createElement('button');
         tabBtn.className = 'tab';
         tabBtn.dataset.tab = id;
