@@ -952,6 +952,10 @@ html:has(body[data-modal]){overflow:hidden}
 .cf-yp.on-ox,.cf-v.on-ox{color:#F0ECEA}
 .cf-m.setup .cf-yp{margin-top:calc(var(--u)*1)}
 .cf-m.setup .cf-v{margin-top:calc(var(--u)*1)}
+.rnote-d{margin-top:calc(var(--u)*.8)!important;padding-top:calc(var(--u)*.8);border-top:1px solid #E1D3CE;font-weight:600;color:#671610!important}
+.rkey .rk-note{font-style:normal;font-weight:600;color:#671610;padding-left:calc(var(--u)*2.2);margin-left:calc(var(--u)*.2);border-left:1px solid #E1D3CE}
+.rkey .rk-note::before{display:none}
+@media (max-aspect-ratio:1/1){.rkey-l{flex-wrap:wrap;row-gap:8px}.rkey .rk-note{flex-basis:100%;padding-left:0;border-left:0;margin:0}}
 </style>
 
 </head>
@@ -1153,7 +1157,7 @@ html:has(body[data-modal]){overflow:hidden}
   <div class="rhead">
     <div><h2>Target revenue ramp</h2>
       <p class="sub">One month of setup, then new cases every month until capacity.</p>
-      <div class="rkey rkey-l"><span class="k-i">International</span><span class="k-u">US</span></div></div>
+      <div class="rkey rkey-l"><span class="k-i">International</span><span class="k-u">US</span><em class="rk-note">New clients depend on the ad budget being spent to reach them.</em></div></div>
   </div>
   <div class="body rbody">
     <div class="rphase"><span class="p1">Setup</span><span class="p2">System live</span></div>
