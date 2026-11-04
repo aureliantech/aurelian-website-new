@@ -1,0 +1,1438 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex, nofollow">
+<title>Client Onboarding</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@500&family=IBM+Plex+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg:#F4F5F7; --card:#FFFFFF; --line:#DDE0E6; --soft:#E7E9EE;
+    --ink:#16181D; --muted:#596070; --accent:#2F55D4; --accent-bg:#EEF2FC;
+    --ready:#C2410C; --ready-bg:#FFF4ED;
+    --mono:'IBM Plex Mono',ui-monospace,monospace;
+  }
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--bg);color:var(--ink);font-family:'IBM Plex Sans',system-ui,sans-serif}
+  .wrap{max-width:1360px;margin:0 auto;padding:40px 32px 120px;display:flex;flex-direction:column;gap:20px}
+  .eyebrow{font-family:var(--mono);font-size:12px;letter-spacing:.08em;text-transform:uppercase;color:var(--muted)}
+
+  /* Header */
+  .top{display:flex;flex-wrap:wrap;justify-content:space-between;align-items:flex-end;gap:20px}
+  .top h1{margin:6px 0 0;font-size:32px;line-height:40px;font-weight:600}
+  .controls{display:flex;flex-wrap:wrap;gap:12px;align-items:flex-end}
+  .field{display:flex;flex-direction:column;gap:4px;font-size:12px;font-weight:500;color:var(--muted)}
+  .field select,.field input{height:44px;border:1px solid #C9CED8;border-radius:8px;background:#fff;padding:0 12px;font:inherit;font-size:14px;color:var(--ink)}
+  .field input.initials{width:120px;text-transform:uppercase;font-family:var(--mono)}
+  .btn{height:44px;padding:0 16px;border-radius:8px;border:1px solid #C9CED8;background:#fff;font:inherit;font-size:14px;color:var(--ink);cursor:pointer}
+  .btn.primary{background:var(--accent);border-color:var(--accent);color:#fff;font-weight:500}
+  .btn:focus-visible,.task:focus-visible,select:focus-visible,input:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+  .addrow{display:none;gap:8px;align-items:flex-end}
+  .addrow.open{display:flex}
+  a.btn{display:inline-flex;align-items:center;text-decoration:none}
+  .syncstate{font-size:12px;color:var(--muted);min-height:16px;margin-top:6px}
+  .syncstate.err{color:#B42318;font-weight:500}
+  body.home .viewtoggle,body.home #copyLink,body.home #backLink,body.home .launched,body.home #rows,body.home #flowWrap,body.home .syncstate{display:none!important}
+  body:not(.home) #home,body:not(.home) #addToggle,body:not(.home) #addRow{display:none!important}
+  .home-list{display:flex;flex-direction:column;gap:8px}
+  .home-item{display:flex;align-items:center;gap:16px;background:var(--card);border:1px solid var(--line);border-radius:12px;padding:16px 20px;text-decoration:none;color:var(--ink)}
+  .home-item:hover{border-color:var(--accent)}
+  .home-item:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+  .home-name{font-size:16px;font-weight:600;flex:1;min-width:0}
+  .home-meta{font-size:13px;color:var(--muted);white-space:nowrap}
+  .home-bar{width:120px;height:6px;border-radius:3px;background:var(--soft);overflow:hidden;flex:none}
+  .home-bar span{display:block;height:100%;background:var(--accent)}
+  .home-empty{color:var(--muted);font-size:14px;padding:24px 0}
+  @media (max-width:640px){.home-bar{display:none}}
+
+  /* Status key */
+  .key{display:flex;flex-wrap:wrap;gap:8px 24px;align-items:center;font-size:13px;color:var(--muted)}
+  .key span{display:inline-flex;align-items:center;gap:8px}
+  .kdot{width:18px;height:18px;border-radius:9px;border:2px solid #B4BAC6;background:#fff;display:inline-flex;align-items:center;justify-content:center}
+  .kdot.done{background:var(--ink);border-color:var(--ink)}
+  .kdot.ready{border-color:var(--ready);background:var(--ready-bg)}
+  .kdot.wait{border-style:dashed;background:#F4F5F7}
+  .kdot.need{border-color:var(--accent);box-shadow:0 0 0 3px var(--accent-bg)}
+
+  /* Rows */
+  .viewtoggle{display:inline-flex;align-self:flex-end;background:var(--soft);border-radius:10px;padding:4px;gap:2px}
+  .viewtoggle button{height:36px;padding:0 14px;border:0;border-radius:7px;background:none;font:inherit;font-size:14px;font-weight:500;color:var(--muted);cursor:pointer}
+  .viewtoggle button[aria-pressed="true"]{background:#fff;color:var(--ink);box-shadow:0 1px 2px rgba(22,24,29,.12)}
+  .flowwrap{background:var(--card);border:1px solid var(--line);border-radius:12px;overflow:auto}
+  .flowwrap[hidden],.rows[hidden]{display:none}
+  .flow{position:relative;display:flex;gap:56px;padding:24px;min-width:max-content}
+  .flow-col{display:flex;flex-direction:column;gap:10px;width:200px;position:relative;z-index:1}
+  .flow-col.grow{animation:grow .35s ease both}
+  @keyframes grow{from{opacity:0;transform:translateX(-28px)}to{opacity:1;transform:none}}
+  .flow-col h3{margin:0 0 4px;font-family:var(--mono);font-size:11px;font-weight:500;letter-spacing:.06em;text-transform:uppercase;color:var(--muted)}
+  .flow-lines{position:absolute;inset:0;pointer-events:none;overflow:visible;z-index:0}
+  .flow-lines path{fill:none;stroke:#C9CED8;stroke-width:1.5;transition:opacity .12s}
+  .flow-lines path.met{stroke:var(--ink)}
+  .tracing .flow-lines path{opacity:.12}
+  .tracing .flow-lines path.on{opacity:1;stroke:var(--accent);stroke-width:2}
+  .fnode{position:relative;display:flex;align-items:flex-start;gap:8px;width:100%;min-height:44px;padding:9px 10px;border:1px solid var(--line);border-radius:10px;background:#fff;font:inherit;font-size:13px;line-height:17px;text-align:left;color:var(--ink);cursor:pointer;transition:opacity .12s,border-color .12s}
+  .fnode:hover{border-color:var(--ink)}
+  .fdot{width:20px;height:20px;flex:none;border-radius:10px;border:2px solid #B4BAC6;background:#fff;display:flex;align-items:center;justify-content:center;color:#8A90A0}
+  .fdot svg{width:11px;height:11px;display:block}
+  .fnode.done .fdot{background:var(--ink);border-color:var(--ink)}
+  .fnode.done .flabel{color:var(--muted);text-decoration:line-through}
+  .fnode.waiting .fdot{border-style:dashed;background:#F4F5F7}
+  .fnode.waiting .flabel{color:var(--muted)}
+  .fcode{font-family:var(--mono);font-size:11px;color:var(--muted);padding-top:1px;flex:none}
+  .fsticky{top:-8px;left:auto;right:-6px;width:16px;height:16px}
+  .tracing .fnode{opacity:.3}
+  .tracing .fnode.t-focus,.tracing .fnode.t-need,.tracing .fnode.t-unlock{opacity:1}
+  .fnode.t-focus{border-color:var(--ink);box-shadow:0 0 0 2px rgba(22,24,29,.12)}
+  .fnode.t-need{border-color:var(--accent);background:var(--accent-bg)}
+  .fnode.t-unlock{border-color:var(--accent);border-style:dashed}
+  @media (prefers-reduced-motion:reduce){.flow-col.grow{animation:none}}
+  .setup{display:flex;flex-wrap:wrap;align-items:flex-end;gap:12px 28px;background:var(--card);border:1px solid var(--line);border-radius:12px;padding:14px 20px}
+  .setup-title{font-size:14px;font-weight:600;align-self:center;margin-right:4px}
+  .setup-group{display:flex;flex-direction:column;gap:4px}
+  .setup-label{font-size:12px;font-weight:500;color:var(--muted)}
+  .seg{display:inline-flex;background:var(--soft);border-radius:9px;padding:3px;gap:2px}
+  .seg button{height:34px;padding:0 12px;border:0;border-radius:7px;background:none;font:inherit;font-size:13px;font-weight:500;color:var(--muted);cursor:pointer}
+  .seg button[aria-pressed="true"]{background:#fff;color:var(--ink);box-shadow:0 1px 2px rgba(22,24,29,.12)}
+  .seg button:focus-visible{outline:2px solid var(--accent);outline-offset:1px}
+  .due{display:block;font-size:11px;line-height:15px;color:var(--muted);font-family:'IBM Plex Sans',sans-serif;font-weight:500;text-decoration:none}
+  .due.today{color:#8A5A00}
+  .due.overdue{color:#B42318;font-weight:600}
+  .p-status .due{display:inline;font-size:13px}
+  .flabel .due{margin-top:2px}
+  .rows{display:flex;flex-direction:column;gap:12px}
+  .row{background:var(--card);border:1px solid var(--line);border-radius:12px;display:flex;flex-wrap:wrap;align-items:stretch;overflow:hidden}
+  .row > .track-scroll{flex:1 1 0}
+  .strip{width:100%;display:flex;align-items:stretch;background:#F8F9FB;border-top:1px solid var(--soft)}
+  .strip-head{width:200px;flex:none;padding:12px 20px;border-right:1px solid var(--soft);display:flex;align-items:center;gap:10px;font-size:13px;color:#3D4350}
+  .strip-head b{font-weight:600}
+  .avatar{width:28px;height:28px;flex:none;border-radius:14px;background:var(--soft);color:#3D4350;display:flex;align-items:center;justify-content:center}
+  .strip-items{flex:1;min-width:0;display:flex;flex-wrap:wrap;align-items:center;gap:4px 8px;padding:8px 20px}
+  .strip-sep{width:1px;height:24px;background:var(--soft)}
+  .citem{position:relative;display:inline-flex;align-items:center;gap:10px;min-height:44px;padding:0 12px 0 8px;border-radius:8px;cursor:pointer;font-size:14px}
+  .citem:hover{background:#EEF0F4}
+  .citem input{position:absolute;opacity:0;width:1px;height:1px}
+  .cbox{width:24px;height:24px;flex:none;border-radius:12px;border:2px solid #B4BAC6;background:#fff;display:flex;align-items:center;justify-content:center;transition:background .15s,border-color .15s}
+  .cbox svg{opacity:0}
+  .citem:hover .cbox{border-color:var(--ink)}
+  .citem input:checked + .cbox{background:var(--ink);border-color:var(--ink)}
+  .citem input:checked + .cbox svg{opacity:1}
+  .citem input:focus-visible + .cbox{outline:2px solid var(--accent);outline-offset:2px}
+  .citem.ok > span:last-child{color:var(--muted);text-decoration:line-through}
+  .row-head{width:200px;flex:none;padding:20px;border-right:1px solid var(--soft);display:flex;flex-direction:column;gap:6px;justify-content:center}
+  .row-head .num{font-family:var(--mono);font-size:12px;color:var(--muted)}
+  .row-head h2{margin:0;font-size:17px;line-height:22px;font-weight:600}
+  .row-head .count{font-size:13px;color:var(--muted)}
+  .row-head .state{font-size:12px;font-weight:500;color:var(--muted)}
+  .row.inprog .row-head .state{color:var(--accent)}
+  .row.complete .row-head .state{color:var(--ink)}
+
+  .track-scroll{flex:1;min-width:0;overflow-x:auto}
+  .track{position:relative;display:flex;align-items:flex-start;padding:22px 20px 18px;min-width:min-content}
+  .rail{position:absolute;top:43px;height:3px;background:var(--soft);border-radius:2px}
+  .rail-fill{position:absolute;top:43px;height:3px;background:var(--ink);border-radius:2px;width:0;transition:width .5s ease}
+
+  .task{position:relative;z-index:1;flex:0 1 136px;min-width:108px;background:none;border:0;padding:0 8px;font:inherit;color:inherit;text-align:center;cursor:pointer;display:flex;flex-direction:column;align-items:center;gap:8px;border-radius:10px;transition:opacity .15s}
+  .dot{width:44px;height:44px;border-radius:22px;border:2px solid #B4BAC6;background:#fff;display:flex;align-items:center;justify-content:center;font-family:var(--mono);font-size:11px;color:var(--muted);transition:background .2s,border-color .2s,box-shadow .15s}
+  .dot .ico-check,.dot .ico-lock{display:none}
+  .task-label{font-size:13px;line-height:18px;color:var(--ink)}
+  .sub{font-size:11px;line-height:16px;min-height:16px}
+
+  /* done */
+  .task.done .dot{background:var(--ink);border-color:var(--ink)}
+  .task.done .dot .ico-check{display:block}
+  .task.done .dot .stepnum{display:none}
+  .dot .stepnum{font-family:var(--mono);font-size:14px;font-weight:500}
+  .task.done .task-label{color:var(--muted);text-decoration:line-through}
+  .task.done .sub{font-family:var(--mono);color:var(--muted)}
+  /* ready: everything it needs is done */
+  .task.ready .dot{border-color:var(--ready);background:var(--ready-bg);color:var(--ready)}
+  .task.ready .sub{font-weight:600;color:var(--ready);text-transform:uppercase;letter-spacing:.06em}
+  /* next: first unlocked, unchecked step in each row */
+  .task.next .dot{border-color:var(--ready);background:var(--ready-bg);color:var(--ready)}
+  .task.next .sub{font-weight:600;color:var(--ready);text-transform:uppercase;letter-spacing:.06em}
+  /* waiting: blocked by earlier steps */
+  .task.waiting .dot{border-style:dashed;background:#F4F5F7;color:#8A90A0}
+  .task.waiting .dot .stepnum{display:none}
+  .task.waiting .dot .ico-lock{display:block}
+  .task.waiting .task-label{color:var(--muted)}
+  .task.waiting .sub{color:var(--muted)}
+  .task:hover .dot{border-color:var(--ink)}
+
+  /* Dependency highlight on hover / focus */
+  .rows.tracing .task{opacity:.28}
+  .rows.tracing .task.is-focus,.rows.tracing .task.is-need,.rows.tracing .task.is-unlock{opacity:1}
+  .task.is-focus .dot{box-shadow:0 0 0 4px rgba(22,24,29,.15)}
+  .task.is-need .dot{border-color:var(--accent);border-style:solid;box-shadow:0 0 0 4px var(--accent-bg)}
+  .task.is-unlock .dot{border-color:var(--accent);border-style:dashed;box-shadow:0 0 0 4px var(--accent-bg)}
+  .rel{display:none;font-size:10px;font-weight:600;letter-spacing:.06em;text-transform:uppercase;color:var(--accent);background:var(--accent-bg);border-radius:4px;padding:1px 6px;position:absolute;top:-18px;white-space:nowrap}
+  .task.is-need .rel,.task.is-unlock .rel{display:block}
+
+  .finish{position:relative;z-index:1;flex:0 1 112px;min-width:96px;display:flex;flex-direction:column;align-items:center;gap:8px;padding:0 8px;text-align:center}
+  .flag{width:44px;height:44px;border-radius:10px;border:2px dashed #B4BAC6;background:#fff;display:flex;align-items:center;justify-content:center;color:#8A90A0}
+  .finish span{font-size:13px;font-weight:500;color:var(--muted)}
+  .row.complete .flag{border:2px solid var(--ink);background:var(--ink);color:#fff}
+  .row.complete .finish span{color:var(--ink)}
+
+  .divider{display:flex;align-items:center;gap:16px;margin:20px 0 4px;font-family:var(--mono);font-size:12px;letter-spacing:.08em;text-transform:uppercase;color:var(--muted)}
+  .divider::before,.divider::after{content:"";flex:1;height:1px;background:#C9CED8}
+  .row.ifneeded{border-style:dashed;border-color:#B4BAC6}
+  .row.ifneeded .row-head{background:#F8F9FB}
+  .row.ifneeded.inprog .row-head .state{color:var(--ready)}
+
+  .launched{display:none;background:var(--ink);color:#fff;border-radius:12px;padding:16px 24px;font-size:16px;font-weight:500}
+  .launched.show{display:block}
+
+  /* Bottom bar: what the hovered step needs and unlocks */
+  .trace-bar{position:fixed;left:50%;bottom:16px;transform:translate(-50%,12px);width:min(1100px,calc(100vw - 32px));background:var(--ink);color:#fff;border-radius:12px;padding:14px 20px;display:flex;flex-wrap:wrap;gap:6px 28px;font-size:13px;line-height:20px;opacity:0;pointer-events:none;transition:opacity .15s,transform .15s;z-index:10;box-shadow:0 12px 40px rgba(22,24,29,.25)}
+  .trace-bar.show{opacity:1;transform:translate(-50%,0)}
+  .trace-bar strong{font-weight:600;width:100%}
+  .trace-bar .lbl{font-family:var(--mono);font-size:11px;letter-spacing:.06em;text-transform:uppercase;color:#AEB4C2;margin-right:8px}
+  .trace-bar .ok{color:#AEB4C2;text-decoration:line-through}
+
+  /* Hover tooltip: what a locked step is waiting on */
+  .tip{position:fixed;z-index:20;max-width:280px;background:var(--ink);color:#fff;border-radius:8px;padding:10px 12px;font-size:13px;line-height:18px;pointer-events:none;opacity:0;transform:translate(-50%,-100%);transition:opacity .12s;box-shadow:0 8px 24px rgba(22,24,29,.2)}
+  .tip.show{opacity:1}
+  .tip b{display:block;font-family:var(--mono);font-size:11px;font-weight:500;letter-spacing:.06em;text-transform:uppercase;color:#AEB4C2;margin-bottom:4px}
+  .tip ul{margin:0;padding:0 0 0 16px}
+  .tip-note{white-space:pre-wrap;background:#FFE58A;color:#3D2E00;border-radius:6px;padding:8px 10px;margin:-2px -4px 8px}
+  .tip-note:last-child{margin-bottom:-2px}
+  .tip-note b{color:#7A5B00}
+  .sticky{position:absolute;top:-10px;left:calc(50% + 10px);z-index:2;width:22px;height:22px;background:#FFD84D;border-radius:3px 3px 3px 9px;box-shadow:0 2px 4px rgba(22,24,29,.2);transform:rotate(6deg);display:flex;align-items:center;justify-content:center}
+  .tip::after{content:"";position:absolute;left:50%;bottom:-5px;width:10px;height:10px;background:var(--ink);transform:translateX(-50%) rotate(45deg)}
+
+  /* Step panel (slides in from the right) */
+  dialog.drawer{position:fixed;inset:0;margin:auto;height:fit-content;max-height:calc(100vh - 48px);width:min(640px,calc(100vw - 32px));max-width:none;border:1px solid var(--line);border-radius:14px;padding:0;color:var(--ink);font-family:inherit;background:#fff;box-shadow:0 20px 60px rgba(22,24,29,.25);overflow:hidden}
+  dialog.drawer[open]{display:flex;flex-direction:column}
+  dialog.drawer::backdrop{background:rgba(22,24,29,.3)}
+  .p-head{display:flex;justify-content:space-between;align-items:flex-start;gap:16px;padding:24px 24px 0}
+  .p-head h3{margin:4px 0 0;font-size:20px;line-height:26px;font-weight:600}
+  .p-status{margin-top:6px;font-size:13px;color:var(--muted)}
+  .icon-btn{width:44px;height:44px;flex:none;border-radius:8px;border:1px solid #C9CED8;background:#fff;color:var(--ink);cursor:pointer;display:flex;align-items:center;justify-content:center}
+  .p-body{flex:1 1 auto;min-height:0;overflow-y:auto;padding:20px 24px 24px;display:flex;flex-direction:column;gap:16px}
+  .p-body > *{flex-shrink:0}
+  .psteps{border:1px solid var(--line);border-radius:10px;padding:14px 16px;font-size:14px;line-height:22px;background:#F8F9FB}
+  .psteps ul{margin:2px 0 0;padding-left:20px}
+  .psteps a{color:var(--accent)}
+  .psteps .warn{color:#B42318;font-weight:600}
+  .psteps .miss{background:#FFF1C2;border-radius:3px;padding:0 2px}
+  .ptip{margin:0;font-size:14px;line-height:21px;color:var(--ink)}
+  .plinks{display:flex;flex-wrap:wrap;gap:8px}
+  .plinks a{display:inline-flex;align-items:center;min-height:36px;padding:0 12px;border-radius:8px;border:1px solid #C9CED8;color:var(--accent);text-decoration:none;font-size:14px;font-weight:500}
+  .plinks a:hover{border-color:var(--accent);background:var(--accent-bg)}
+  .pfields{display:flex;flex-direction:column;gap:12px}
+  .pf{display:flex;flex-direction:column;gap:4px;font-size:13px;font-weight:500}
+  .pf input,.pnotes{width:100%;min-height:44px;border:1px solid #C9CED8;border-radius:8px;padding:10px 12px;font:inherit;font-size:14px;color:var(--ink);background:#fff;resize:vertical}
+  .pf select{width:100%;min-height:44px;border:1px solid #C9CED8;border-radius:8px;padding:0 12px;font:inherit;font-size:14px;color:var(--ink);background:#fff}
+  .pf select:focus,.pf input:focus,.pnotes:focus{outline:2px solid var(--accent);outline-offset:1px;border-color:var(--accent)}
+  .pwrap{display:flex;gap:8px}
+  .pwrap input{flex:1;min-width:0}
+  .pwrap .btn{display:inline-flex;align-items:center;text-decoration:none;flex:none}
+  .qcard{border:0;margin:0 0 14px;padding:0}
+  .qcard legend{padding:0;margin-bottom:8px;font-size:15px;font-weight:600;color:var(--ink)}
+  .qopts{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
+  .qopt{display:flex;align-items:flex-start;gap:10px;min-height:56px;padding:12px 14px;border:2px solid #C9CED8;border-radius:10px;background:#fff;font:inherit;text-align:left;color:var(--ink);cursor:pointer}
+  .qopt:hover{border-color:var(--ink)}
+  .qopt.on{border-color:var(--ink);background:#F4F5F7}
+  .qopt:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+  .qradio{width:20px;height:20px;flex:none;margin-top:1px;border-radius:10px;border:2px solid #9AA1AE;background:#fff}
+  .qopt.on .qradio{border:6px solid var(--ink)}
+  .qtext{display:flex;flex-direction:column;gap:2px}
+  .qtext b{font-size:14px;font-weight:600}
+  .qtext span{font-size:12px;color:var(--muted)}
+  .pfirst.done .qopt.on{border-color:#2E7D4F}
+  .pfirst.done .qopt.on .qradio{border-color:#2E7D4F}
+  @media (max-width:560px){ .qopts{grid-template-columns:1fr} }
+  .pchoice{display:flex;align-items:center;gap:12px;flex-wrap:wrap}
+  .pchoice-label{font-size:13px;font-weight:600}
+  .pfirst{border:2px solid #F2C94C;background:#FFFBEA;border-radius:12px;padding:14px 16px 16px}
+  .pfirst.done{border-color:#2E7D4F;background:#EAF6EE}
+  .pfirst.done .pfirst-title{color:#1E6B3D}
+  .pfirst.done .pf span{color:#1E6B3D}
+  .pfirst.done .pf input{border-color:#9CCDAE}
+  .pfirst-title{display:inline-flex;align-items:center;gap:8px}
+  .pfirst-title svg{display:none}
+  .pfirst.done .pfirst-title svg{display:block}
+  .pfirst-head{display:flex;justify-content:space-between;align-items:center;gap:12px;margin-bottom:12px}
+  .pfirst-title{font-size:15px;font-weight:600}
+  .pfirst-count{font-size:12px;font-weight:600;padding:2px 10px;border-radius:10px;background:#F2C94C;color:#3D2E00}
+  .pfirst.done .pfirst-count{display:none}
+  .pfirst-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}
+  .pfirst .pf input.empty{border-color:#E0A800;background:#fff}
+  @media (max-width:560px){ .pfirst-grid{grid-template-columns:1fr} }
+  .pto{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}
+  .tpl{border:1px solid var(--line);border-radius:10px;overflow:hidden}
+  .tpl-to{padding:10px 14px;border-bottom:1px solid var(--line);font-size:13px;color:#3D4350;background:#F8F9FB}
+  .tpl-to span{font-family:var(--mono);font-size:11px;text-transform:uppercase;letter-spacing:.06em;color:var(--muted);margin-right:6px}
+  .tpl-subj{display:block;width:100%;border:0;border-bottom:1px solid var(--line);padding:12px 14px;font:inherit;font-size:14px;font-weight:600;color:var(--ink);background:#F8F9FB}
+  .tpl-body{display:block;width:100%;border:0;padding:14px;font-family:Arial,Helvetica,sans-serif;font-size:14px;line-height:21px;color:#222;min-height:120px;max-height:420px;overflow-y:auto;background:#fff}
+  .tpl-body ul{margin:0;padding-left:24px}
+  .tpl-body a{color:#1155CC}
+  .tpl-body .miss{background:#FFF1C2;border-radius:3px;padding:0 2px}
+  .tpl-note{font-size:13px;color:var(--muted)}
+  .tpl-subj:focus,.tpl-body:focus{outline:2px solid var(--accent);outline-offset:-2px}
+  .tpl-actions{display:flex;flex-wrap:wrap;align-items:center;gap:8px;padding:12px 14px;border-top:1px solid var(--line)}
+  .tpl-reset{margin-left:auto;background:none;border:0;padding:0;font:inherit;font-size:13px;color:var(--accent);cursor:pointer;text-decoration:underline}
+  @media (max-width:560px){ .pto{grid-template-columns:1fr} }
+  .tpl-actions a.btn{display:inline-flex;align-items:center;text-decoration:none}
+  .p-foot{border-top:1px solid var(--soft);padding:16px 24px;display:flex;flex-wrap:wrap;align-items:center;justify-content:flex-end;gap:8px}
+  .p-foot .initials{height:44px;width:110px;border:1px solid #C9CED8;border-radius:8px;padding:0 12px;font-family:var(--mono);font-size:14px;text-transform:uppercase}
+  .p-foot .err{width:100%;margin:0;text-align:right;color:#B42318;font-size:13px}
+  .p-foot .err:empty{display:none}
+  .btn.danger{background:#B42318;border-color:#B42318;color:#fff;font-weight:600}
+  .btn.danger:hover{background:#912018;border-color:#912018}
+  .uncheck-confirm{width:100%;display:flex;flex-wrap:wrap;align-items:center;justify-content:flex-end;gap:8px 10px;background:#FEF3F2;border:1px solid #FDA29B;border-radius:10px;padding:10px 12px}
+  .uncheck-confirm span{flex:1 1 200px;min-width:0;font-size:14px;font-weight:500;color:#912018}
+  .uncheck-confirm .btn{flex:none}
+  .btn[disabled]{opacity:.45;cursor:not-allowed}
+  @media (max-width:720px){
+    .wrap{padding:24px 16px 48px}
+    .row{flex-direction:column;flex-wrap:nowrap}
+    .row > .track-scroll{flex:none}
+    .strip{flex-direction:column}
+    .strip-head{width:auto;border-right:0}
+    .strip-sep{display:none}
+    .row-head{width:auto;border-right:0;border-bottom:1px solid var(--soft);flex-direction:row;flex-wrap:wrap;align-items:baseline;gap:4px 12px;padding:14px 16px}
+    .trace-bar{display:none}
+  }
+  @media (prefers-reduced-motion:reduce){.rail-fill,.dot,.task,.trace-bar{transition:none}}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <header class="top">
+    <div>
+      <div class="eyebrow">New client onboarding</div>
+      <h1 id="clientTitle">Loading…</h1>
+      <div class="syncstate" id="syncState" role="status" aria-live="polite"></div>
+    </div>
+    <div class="controls">
+      <div class="viewtoggle" role="group" aria-label="View">
+        <button type="button" data-view="list" aria-pressed="true">Checklist</button>
+        <button type="button" data-view="flow" aria-pressed="false">Flow map</button>
+      </div>
+      <a class="btn" id="backLink" href="?">All clients</a>
+      <button class="btn" id="copyLink" type="button">Copy client link</button>
+      <button class="btn primary" id="addToggle" type="button">+ New client</button>
+      <div class="addrow" id="addRow">
+        <label class="field">Law firm name
+          <input id="newClient" type="text" placeholder="e.g. Reyes Injury Law">
+        </label>
+        <button class="btn primary" id="addClient" type="button">Create</button>
+      </div>
+    </div>
+  </header>
+
+
+  <div id="home"><div class="home-list" id="homeList"><div class="home-empty">Loading clients…</div></div></div>
+
+  <div class="launched" id="launched">All steps complete. This client is live.</div>
+
+  <div class="rows" id="rows"></div>
+  <div class="flowwrap" id="flowWrap" hidden><div class="flow" id="flow"></div></div>
+</div>
+
+
+<div class="tip" id="tip" role="tooltip"></div>
+
+<dialog id="panel" class="drawer" aria-labelledby="pTitle">
+  <div class="p-head">
+    <div>
+      <div class="eyebrow" id="pCat"></div>
+      <h3 id="pTitle"></h3>
+      <div class="p-status" id="pStatus"></div>
+    </div>
+    <button class="icon-btn" type="button" id="pClose" aria-label="Close"><svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" aria-hidden="true"><path d="M3.5 3.5l9 9M12.5 3.5l-9 9"/></svg></button>
+  </div>
+  <div class="p-body" id="pBody"></div>
+  <div class="p-foot" id="pFoot"></div>
+</dialog>
+
+<script>
+/* ---------- EDIT YOUR CHECKLIST HERE ----------
+   Each category is one left-to-right row.
+   Each task: { id, label, needs: [ids of steps that must be done first] }
+   ids must be unique. Check-offs are saved by id, so you can reorder,
+   add or remove steps without messing up what's already checked.       */
+var CHECKLIST = [
+  { name: 'Onboarding', tasks: [
+    { id: 'interview',  label: 'Hold onboarding interview' },
+    { id: 'adsAccount', label: 'Create Google Ads account' },
+    { id: 'billing',    label: 'Invite client as billing user to add card', needs: ['adsAccount'] },
+    { id: 'adsVerify',  label: 'Complete Google Ads advertiser verification', needs: ['adsAccount'] },
+    { id: 'intakeForm', label: 'Create call intake form' },
+    { id: 'kickoff',    label: 'Send kickoff email', needs: ['billing', 'intakeForm'] },
+    { id: 'review',     label: 'Send pages to client for review', needs: ['build'] } ]},
+  { name: 'Website', tasks: [
+    { id: 'domain',        label: 'Get domain access or buy domain' },
+    { id: 'build',         label: 'Build website / landing pages', needs: ['interview', 'kickoff'] },
+    { id: 'siteIntakeNum', label: 'Add call intake phone number to pages', needs: ['build', 'intakeNum'] },
+    { id: 'siteCode',      label: 'Install CallRail number swap code', needs: ['siteIntakeNum', 'callrail'] },
+    { id: 'connectDomain', label: 'Connect approved pages to domain', needs: ['review', '@approve', 'domain', 'siteCode'] } ]},
+  { name: 'Ads', tasks: [
+    { id: 'research',    label: 'Complete ad research' },
+    { id: 'createAds',   label: 'Create ads', needs: ['research'] },
+    { id: 'adsCallRail', label: 'Add CallRail number to ads', needs: ['createAds', 'callrail'] },
+    { id: 'linkAds',     label: 'Connect ads to landing pages', needs: ['createAds', 'connectDomain'] } ]},
+  { name: 'Analytics', tasks: [
+    { id: 'callrail',    label: 'Set up CallRail', needs: ['intakeNum', 'adsAccount'] },
+    { id: 'gadsConv',    label: 'Set up Google Ads conversions', needs: ['callrail'] },
+    { id: 'testCalls',   label: 'Test tracking before launch', needs: ['gadsConv', 'siteCode', 'connectDomain', 'adsCallRail', 'linkAds'] },
+    { id: 'analyzer',    label: 'Add client to AI call analyzer', needs: ['testCalls'] },
+    { id: 'analyzerTest',label: 'Test AI call analyzer emails', needs: ['analyzer', 'siteCode'] } ]},
+  { name: 'Call Intake', tasks: [
+    { id: 'intakeSales',    label: 'Email call intake sales team for discovery call', needs: ['kickoff'] },
+    { id: 'payIntake',      label: 'Pay for first month', needs: ['intakeSales'] },
+    { id: 'reviewForm',     label: 'Review client\'s call intake form', needs: ['intakeForm', '@formDone'] },
+    { id: 'scheduleIntake', label: 'Call intake onboarding call + account setup', needs: ['payIntake', 'reviewForm'] },
+    { id: 'intakeNum',      label: 'Get call intake phone number', needs: ['scheduleIntake'] },
+    { id: 'intakePortal',   label: 'Get client portal link + login', needs: ['scheduleIntake'] },
+    { id: 'intakeFlow',     label: 'Get + review Call Intake Flow Instructions', needs: ['scheduleIntake'] } ]},
+  { name: 'Launch', tasks: [
+    { id: 'adsOn',     label: 'Turn on ads', needs: ['linkAds', 'adsCallRail', 'testCalls', 'analyzerTest'] },
+    { id: 'liveEmail', label: 'Send client "you\'re live" email', needs: ['adsOn'] } ]},
+
+  /* Only-if-needed rows: below a divider,
+     not counted toward "All steps complete". */
+  { name: 'Pause Service', ifNeeded: true, finish: 'Paused', tasks: [
+    { id: 'pDate',    label: 'Confirm pause date + reason with client' },
+    { id: 'pAds',     label: 'Pause Google Ads campaigns', needs: ['pDate'] },
+    { id: 'pIntake',  label: 'Pause call intake service', needs: ['pDate'] },
+    { id: 'pBilling', label: 'Pause billing', needs: ['pDate'] },
+    { id: 'pKeep',    label: 'Keep CallRail numbers + tracking active', needs: ['pDate'] },
+    { id: 'pEmail',   label: 'Send pause confirmation email', needs: ['pAds', 'pIntake', 'pBilling'] },
+    { id: 'pRestart', label: 'Set restart check-in date', needs: ['pEmail'] } ]},
+  { name: 'Offboarding', ifNeeded: true, finish: 'Offboarded', tasks: [
+    { id: 'oDate',     label: 'Confirm end date + send final invoice' },
+    { id: 'oAds',      label: 'Turn off Google Ads campaigns', needs: ['oDate'] },
+    { id: 'oSite',     label: 'Hand over website, pages + domain access', needs: ['oDate'] },
+    { id: 'oCallRail', label: 'Release or port CallRail numbers', needs: ['oAds'] },
+    { id: 'oIntake',   label: 'Cancel call intake service', needs: ['oDate'] },
+    { id: 'oAccess',   label: 'Disconnect AI call analyzer + remove agency access', needs: ['oAds', 'oCallRail'] },
+    { id: 'oEmail',    label: 'Send offboarding email + final report', needs: ['oAds', 'oSite', 'oCallRail', 'oIntake', 'oAccess'] } ]}
+];
+/* ---------------------------------------------- */
+
+/* ---------- STEP HELP ----------
+   FIELDS: info entered once per client. Use any field in a tip or email as {key}.
+   HELP[stepId]: tip (one line), links [label, url], fields [keys], email {subject, body} */
+var FIELDS = {
+  firmName:       { label: 'Law firm name', placeholder: 'e.g. Smith & Jones Law Group' },
+  contactName:    { label: 'Client contact name' },
+  contactEmail:   { label: 'Client contact email', type: 'email' },
+  emailDomain:    { label: 'Firm email domain', derived: true },
+  reviewBy:       { label: 'Pages ready for review by', type: 'date' },
+  launchTarget:   { label: 'Target launch date', type: 'date' },
+  adsCustomerId:  { label: 'Google Ads customer ID', placeholder: '123-456-7890' },
+  intakeFormLink: { label: 'Call intake form link', type: 'url' },
+  previewUrl:     { label: 'Preview link', type: 'url' },
+  approvedOn:     { label: 'Client approved on', type: 'date' },
+  domain:         { label: 'Domain', placeholder: 'example.com' },
+  registrar:      { label: 'Registered at', type: 'select', options: ['GoDaddy', 'Squarespace / Google Domains', 'Namecheap', 'Cloudflare', 'Other / not sure'] },
+  accessEmail:    { label: 'Client grants access to (email)', type: 'email', placeholder: 'e.g. you@aureliantech.co' },
+  ga4Id:          { label: 'GA4 measurement ID', placeholder: 'G-XXXXXXXXXX' },
+  callrailAdsNum: { label: 'CallRail number for Google Ads', type: 'tel' },
+  salesEmail:     { label: 'Call intake sales team email', type: 'email' },
+  intakeNumber:   { label: 'Call intake phone number', type: 'tel' },
+  intakeFlowLink: { label: 'Call Intake Flow Instructions link', type: 'url' },
+  portalUrl:      { label: 'Client portal link', type: 'url' },
+  portalUser:     { label: 'Portal username or email' },
+  portalPass:     { label: 'Portal password', type: 'password' },
+  cardLink:       { label: 'Card update link (from Sarah Jane)', type: 'url' },
+  cardLinkExpires:{ label: 'Link expires on (7 days after it was created)', type: 'date' },
+  launchDate:     { label: 'Launch date', type: 'date' },
+  pauseDate:      { label: 'Pause date', type: 'date' },
+  restartDate:    { label: 'Restart check-in date', type: 'date' },
+  endDate:        { label: 'Last day of service', type: 'date' }
+};
+
+var ADS = ['Google Ads', 'https://ads.google.com'], GA4 = ['GA4', 'https://analytics.google.com'],
+    CALLRAIL = ['CallRail', 'https://app.callrail.com'], GSC = ['Search Console', 'https://search.google.com/search-console'];
+
+function domainHelp(o){
+  if (o.domain === 'buy') return {
+    links: [['Buy on Cloudflare', 'https://www.cloudflare.com/products/registrar/']], top: ['firmName'], fields: ['domain'], after: ['domain'],
+    steps: [
+      '**What you need to do**',
+      '- Pick a short, easy-to-say domain for **{firmName}** (a .com if you can get one)',
+      '- Buy it on Cloudflare and turn on auto-renew so it never lapses',
+      '- Enter the domain you bought in the box below',
+      '- !!Only check this off once the purchase is complete and the domain shows in your Cloudflare account.!!'
+    ] };
+  return {
+    links: [['Find registrar', 'https://lookup.icann.org']], top: ['domain', 'registrar', 'accessEmail'],
+    steps: [
+      '**What you need to do**',
+      '- Fill in the domain, where it\'s registered, and who gets access. The kickoff email uses these to ask the client for access',
+      '- Not sure where it\'s registered? Look it up with the Find registrar button',
+      '- After the kickoff email goes out, watch for the invite at **{accessEmail}** and accept it',
+      '- Sign in and confirm you can open **{domain}** and its DNS settings',
+      '- !!Only check this off once you can see the DNS settings.!!',
+      '',
+      '**What the client is asked to do**',
+      '{registrarSteps}'
+    ] };
+}
+
+var HELP = {
+  kickoff:    { client: ['[[interviewTodo]]Book the interview', 'Add card in Google Ads', 'Fill out call intake form', '[[theirDomain]]Give us domain access'],
+                fields: ['reviewBy', 'launchTarget'],
+                email: { subject: 'Welcome aboard! Here\'s what we need to get started', body: [
+                  'Hi {contactName},',
+                  '',
+                  'Welcome aboard! We\'re excited to get started on your ads and new pages. Here\'s everything we need from you. Each one only takes a few minutes:',
+                  '',
+                  '[[interviewTodo]]**{#}. Book your onboarding interview**',
+                  '[[interviewTodo]]A short call to learn about your firm, your practice areas, and the clients you serve. [Book a time that works for you here](https://calendly.com/josh-aurelian/positioning).',
+                  '[[interviewTodo]]',
+                  '**{#}. Add a card in Google Ads**',
+                  'You\'ll get an invite from Google in a separate email. Accept it, then add a company card under Billing. Google charges ad spend to it directly. If the invite doesn\'t come through, let me know and I\'ll resend it.',
+                  '',
+                  '**{#}. Fill out the [call intake form]({intakeFormLink})**',
+                  'This helps our call intake team answer your calls just the way you\'d like. A few tips:',
+                  '- Fill in any blanks (or leave them if unsure)',
+                  '- Swap placeholders like [ATTORNEY NAME] for the right info',
+                  '- Click "Save My Answers" at the bottom when you\'re done',
+                  '',
+                  '[[theirDomain]]**{#}. Give us access to {domain}**',
+                  '[[theirDomain]]This lets us connect your new pages to your domain. We only change the settings needed for that.',
+                  '[[theirDomain]]{registrarSteps}',
+                  '[[theirDomain]]',
+                  '**What to expect next**',
+                  '[[buyDomain]]- We\'ll register a new domain for your new pages and send you the address.',
+                  '- Our call intake team will reach out to schedule a short discovery call, then an onboarding call to set up your call answering.',
+                  '- **By {reviewBy}:** Your new pages will be ready for you to review.',
+                  '- **{launchTarget}:** Launch day!',
+                  '',
+                  'Thanks so much, and feel free to reach out with any questions along the way.',
+                  '',
+                  'Best,'
+                ].join('\n') } },
+  interview:  { tip: 'Do this first. If it isn\'t checked off when the kickoff email goes out, the kickoff email asks them to book it.', links: [['Booking page', 'https://calendly.com/josh-aurelian/positioning']],
+                email: { subject: 'Let\'s get to know your firm', body: [
+                  'Hi {contactName},',
+                  '',
+                  'Welcome aboard! We\'re excited to work with you.',
+                  '',
+                  'Our first step is a short onboarding call to learn more about your firm: your practice areas, the clients you serve, and what makes your firm the right choice for them. This helps us write ads and landing pages that speak directly to the people you want to reach.',
+                  '',
+                  '[Book a time that works for you here](https://calendly.com/josh-aurelian/positioning).',
+                  '',
+                  'Looking forward to talking soon!',
+                  '',
+                  'Best,'
+                ].join('\n') } },
+  adsAccount: { top: ['firmName'], links: [ADS], fields: ['adsCustomerId'],
+                steps: [
+                  '**In the manager account (Aurelian 929-107-8633)**',
+                  '- Accounts → Sub-account settings',
+                  '- Click the blue **+** → Create new account',
+                  '- Name: **{firmName}**',
+                  '- Country: United States',
+                  '- !!Time zone: the FIRM\'S local time zone (e.g. New York for Eastern). This controls when ads run and can\'t be changed later.!!',
+                  '- Currency: USD (can\'t be changed later)',
+                  '- Data protection contact: from this manager',
+                  '- Invite user: leave blank',
+                  '- Complete the reCAPTCHA → Save and continue',
+                  '- !!On the billing setup page, click Cancel. Don\'t enter billing; the client adds their own card.!!',
+                  '- Paste the new customer ID below'
+                ] },
+  billing:    { top: ['firmName'], links: [ADS],
+                steps: [
+                  '**1. Allow the firm\'s domain (in the manager account)**',
+                  '- Admin → Access and security → **Security** tab',
+                  '- Allowed domains → Add domain → **{emailDomain}**',
+                  '- !!This must be the domain of the firm\'s email addresses (name@{emailDomain}), not just their website. If the client\'s email doesn\'t end in this domain, their invite won\'t work.!!',
+                  '- Set for: This manager account and all accounts it owns',
+                  '- Save and wait for confirmation',
+                  '',
+                  '**2. Switch into {firmName}**',
+                  '- Account switcher → {firmName}',
+                  '- !!Check the account name at the top says {firmName}, NOT Aurelian. If it says Aurelian, you\'re still in the manager account and the invite will go to the wrong place.!!',
+                  '- Admin → Access and security → Security',
+                  '- Check **{emailDomain}**, uncheck other clients\' domains, keep aureliantech.co checked',
+                  '- Save',
+                  '',
+                  '**3. Invite the client**',
+                  '- **Invite whoever will add the firm\'s billing card.** This may not be your main contact, so ask if unsure.',
+                  '- Users tab → **+**',
+                  '- Email: the billing person\'s email',
+                  '- Access expires: Never',
+                  '- Access level: **Billing**',
+                  '- Send'
+                ] },
+  intakeForm: { links: [['Call flows tool', 'https://www.aureliantech.co/call-flows.html']], fields: ['intakeFormLink'], after: ['intakeFormLink'],
+                steps: [
+                  '**1. Open the tool**',
+                  '- Go to [aureliantech.co/call-flows.html](https://www.aureliantech.co/call-flows.html)',
+                  '',
+                  '**2. Create the client**',
+                  '- Click the **Create New Client** tab (at the top)',
+                  '- Click the **Onboarding Questions** sub-tab. It\'s already filled in with your saved defaults',
+                  '- Change anything specific to this firm. Skip if nothing needs changing; the client can fill in the rest',
+                  '- Click **+ Save as New Client**',
+                  '- Type **{firmName}** when prompted and confirm',
+                  '- Wait for the save to finish. A new tab with the firm\'s name appears at the top',
+                  '',
+                  '**3. Get the link**',
+                  '- Click the new firm-name tab',
+                  '- Click the **Call Intake Flow** sub-tab',
+                  '- Scroll to the very bottom',
+                  '- Click **Copy Client Link** (the button says "Copied ✓")',
+                  '- Paste it in the box below. It\'s added to the client\'s kickoff email automatically (next step: Send kickoff email)',
+                  '',
+                  '**To see the client\'s answers (after they fill it out)**',
+                  '- Open [the client\'s form link]({intakeFormLink}). Their saved answers show there',
+                  '',
+                  '**Good to know**',
+                  '- The client only sees their firm name and the onboarding questions, nothing else',
+                  '- Lost the link? Go back to the firm\'s tab and click **Copy Client Link** again. It\'s always the same link'
+                ] },
+  review:     { client: ['Approve the pages'], fields: ['approvedOn'],
+                email: { subject: 'Your new pages are ready to review', body: 'Hi {contactName},\n\nGood news: [your new pages are ready to review]({previewUrl})!\n\nTake a look and reply with any changes, big or small. If everything looks good, just reply **"Approved"** and we\'ll get them live.\n\nThanks!' } },
+
+  domain:        function(o){ var h = domainHelp(o); h.choice = 'domain'; return h; },
+  build:         { fields: ['previewUrl'] },
+  siteIntakeNum: { steps: [
+                   '- Put **{intakeNumber}** on every call button and visible number',
+                   '- Use the same number format everywhere, as text (no images)',
+                   '- Make every call button a tel: link with that number'
+                 ] },
+  siteCode:      { links: [CALLRAIL], steps: [
+                   '- In CallRail, copy the swap code (snippet) for this company',
+                   '- Install it on every page',
+                   '- Check that the call intake number swaps to a CallRail number when you view a page'
+                 ] },
+  connectDomain: { tip: 'Approved {approvedOn} · {domain} at {registrar}' },
+
+  research:    { links: [ADS, ['Ads Transparency Center', 'https://adstransparency.google.com']] },
+  createAds:   { links: [ADS] },
+  linkAds:     { tip: 'Domain: {domain}', links: [ADS] },
+  adsVerify:   { links: [ADS], steps: [
+                 '- In Google Ads, go to Billing → **Advertiser verification**',
+                 '- Enter the firm\'s legal name and details exactly as registered',
+                 '- Upload any documents Google asks for, and submit',
+                 '- Check back until it shows **Verified**'
+               ] },
+  adsCallRail: { tip: 'Number: {callrailAdsNum}', links: [ADS] },
+
+  callrail:    { links: [CALLRAIL], fields: ['callrailAdsNum'], steps: [
+                 '**Numbers**',
+                 '- Create a visitor-level (session) number pool for Google Ads',
+                 '- Set swap target = **{intakeNumber}**',
+                 '- Forward pool numbers to **{intakeNumber}**',
+                 '- Create a dedicated static number for the Google Ads call asset (enter it below)',
+                 '',
+                 '**Settings**',
+                 '- Turn on call recording + email notifications',
+                 '- Connect the Google Ads integration'
+               ] },
+  gadsConv:    { links: [ADS, CALLRAIL], steps: [
+                 '**Google Ads: Admin → Account settings**',
+                 '- Turn on **auto-tagging**',
+                 '- Turn on **call reporting**',
+                 '',
+                 '**Google Ads: Goals → Conversions**',
+                 '- Create **Qualified Call** (import from CallRail) → Primary, Count = One',
+                 '- Create **Signed Case** (import) → Secondary, default value = average case value',
+                 '- Create **Calls from ads** (call asset calls), minimum length 60–90s → Primary',
+                 '- Set all other call/click conversions to **Secondary**',
+                 '',
+                 '**Back in CallRail: map conversions**',
+                 '- First-time caller 60–90s+ OR tagged "Qualified" → **Qualified Call**',
+                 '- Tagged "Signed" → **Signed Case**'
+               ] },
+  analyzer:    { steps: [
+                 '- Add **{firmName}** to the AI call analyzer',
+                 '- Connect it to this client\'s CallRail account so it receives their calls',
+                 '- Set who gets the analyzer emails'
+               ] },
+  analyzerTest:{ steps: [
+                 '**Call each number the client uses, then confirm an analyzer email arrives for each:**',
+                 '- Google Ads call asset number: **{callrailAdsNum}**',
+                 '- Website number (from the live site, after it swaps to a CallRail number)',
+                 '- Any other numbers the client uses (note them below)',
+                 '',
+                 '- !!If any number doesn\'t send an email, fix it before launch.!!'
+               ] },
+  testCalls:   { links: [CALLRAIL, ADS], steps: [
+                 '- Open [the landing page with a test click ID](https://{domain}/?gclid=TEST123) in an incognito window',
+                 '- Every number and tel: link should swap to a CallRail number',
+                 '- ?gclid= should stay in the URL after any redirects',
+                 '- Make a test call → CallRail shows source = **Google Ads**',
+                 '- Within 1–2 days, Google Ads → Goals → Conversions should show **Recording conversions**'
+               ] },
+
+  intakeSales:    { client: ['Attend discovery call'], email: { toField: 'salesEmail', subject: 'New client: {firmName}', body: [
+                    'Hi there,',
+                    '',
+                    'I have a new law firm client, **{firmName}**, who\'d like to get call answering set up. Could you reach out to schedule a discovery call with them?',
+                    '',
+                    '- Contact: {contactName} ({contactEmail})',
+                    '- Desired launch date: **{launchTarget}**',
+                    '',
+                    'I\'ll cover payment for their first month, and I\'m happy to join the onboarding call if it helps.',
+                    '',
+                    'Thanks so much!'
+                  ].join('\n') } },
+  payIntake:      { tip: 'Covers the client\'s first month. The call intake team handles billing with the client after that.', links: [['Payment page', 'https://billing.zohosecure.com/subscribe/e25c450aab850b2fdf73f2914d198048b9de07abf9a0975fad482bf477cf719e/FirstMonth']] },
+  reviewForm:     { steps: [
+                    '- Open [the client\'s call intake form]({intakeFormLink}) and read through their answers',
+                    '- Check nothing is left blank that the call intake team will need (hours, office locations, consult preferences)',
+                    '- Make sure placeholders like [ATTORNEY NAME] were replaced',
+                    '- Anything missing or unclear? Ask the client to fix it before the onboarding call',
+                    '- Note anything the call intake team should know below'
+                  ] },
+  scheduleIntake: { client: ['Attend onboarding call'], tip: 'The call intake team runs the onboarding call and sets up the account with the client. You can join, but you don\'t have to. Check this off once it\'s done.' },
+  intakePortal:   { tip: 'The call intake team sends the client portal link and login. Enter them below.', fields: ['portalUrl', 'portalUser', 'portalPass'] },
+  intakeFlow:     { tip: 'The call intake team emails these instructions after the onboarding call. Reviewing them closes out call intake.', fields: ['intakeFlowLink'], after: ['intakeFlowLink'], steps: [
+                    '**1. Get the instructions**',
+                    '- Paste the Call Intake Flow Instructions link in the box below',
+                    '',
+                    '**2. Review them against [the client\'s call intake form]({intakeFormLink})**',
+                    '- Firm name, office locations and hours',
+                    '- Practice areas, and the cases they do and don\'t take',
+                    '- How consults are booked, and who gets each lead and how',
+                    '- After-hours handling',
+                    '- Phone number matches **{intakeNumber}**',
+                    '',
+                    '**3. Fix anything that\'s wrong**',
+                    '- Send corrections to the call intake team and wait for the updated version',
+                    '- !!Only check this off once the instructions are correct. This closes out call intake.!!'
+                  ] },
+  intakeNum:      { fields: ['intakeNumber'] },
+
+  adsOn:     { links: [ADS], fields: ['launchDate'] },
+  liveEmail: { email: { subject: 'You\'re live!', body: 'Hi {contactName},\n\nYour ads went live on {launchDate}. The first couple of weeks are a learning period, so we\'ll be watching closely and adjusting. You\'ll get a monthly report.' } },
+
+  pDate:    { client: ['Confirm pause date'], fields: ['pauseDate'] },
+  pAds:     { tip: 'Pause, don\'t remove.', links: [ADS] },
+  pIntake:  {},
+  pBilling: {},
+  pKeep:    { tip: 'Releasing numbers means losing them.', links: [CALLRAIL] },
+  pEmail:   { email: { subject: 'Your service is paused', body: 'Hi {contactName},\n\nYour service is paused as of {pauseDate}. Your ads and tracking numbers are saved, so restarting is easy. We\'ll check in around {restartDate}.' } },
+  pRestart: { fields: ['restartDate'] },
+
+  oDate:     { client: ['Pay final invoice'], fields: ['endDate'] },
+  oAds:      { links: [ADS] },
+  oSite:     { client: ['Confirm they have website + domain access'] },
+  oCallRail: { client: ['Decide: keep or release tracking numbers'], tip: 'Port to the client if they want to keep them, otherwise release.', links: [CALLRAIL] },
+  oIntake:   {},
+  oAccess:   { links: [ADS, GA4, GSC] },
+  oEmail:    { email: { subject: 'Wrapping up', body: 'Hi {contactName},\n\nThis confirms your last day of service is {endDate}. Your ads account, website and domain access are yours. Thanks for working with us.' } }
+};
+/* ------------------------------- */
+
+var CHECK_SVG = '<svg class="ico-check" width="18" height="18" viewBox="0 0 12 12" fill="none" stroke="#fff" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M2.5 6.2l2.3 2.3 4.7-5"/></svg>';
+var LOCK_SVG = '<svg class="ico-lock" width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3.5" y="7" width="9" height="6.5" rx="1.5"/><path d="M5.5 7V5a2.5 2.5 0 015 0v2"/></svg>';
+var FLAG_SVG = '<svg width="18" height="18" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3.5 14V2.5M3.5 3h8l-2 3 2 3h-8"/></svg>';
+
+/* ---------- Setup options per client ---------- */
+var OPTIONS = [
+  { key: 'domain', label: 'Domain', question: 'Is the firm using its own domain?',
+    choices: [['theirs', 'Yes, use their domain', 'The kickoff email asks them for access'], ['buy', 'No, we\'re buying one', 'We buy it on Cloudflare']] },
+  { key: 'interview', label: 'Onboarding interview', question: 'Has the onboarding interview already happened?',
+    choices: [['todo', 'Not yet', 'The kickoff email asks them to book it'], ['done', 'Yes, already done', 'The interview step is checked off for you']] }
+];
+function opts(){
+  var d = (data.info && data.info[data.current]) || {}, o = {};
+  OPTIONS.forEach(function(op){ o[op.key] = d['opt_' + op.key] || op.choices[0][0]; });
+  return o;
+}
+var CONDS = {
+  interviewTodo: function(o){ return !state().interview; },
+  buyDomain:     function(o){ return o.domain === 'buy'; },
+  theirDomain:   function(o){ return o.domain !== 'buy'; },
+
+};
+function condOk(name){ return CONDS[name] ? CONDS[name](opts()) : true; }
+/* Lines starting [[cond]] are kept only when cond is true; {#} numbers headings in order. */
+/* Exact steps for granting domain access, by registrar */
+function registrarSteps(){
+  var r = (val('registrar') || '').toLowerCase();
+  if (/godaddy/.test(r)) return [
+    '- Sign in to GoDaddy and open [Delegate Access](https://account.godaddy.com/access)',
+    '- Under "People who can access my account," click **Invite to Access**',
+    '- Enter **{accessEmail}**, choose the **Domains Only** access level, then click **Invite**'];
+  if (/squarespace|google/.test(r)) return [
+    '- Sign in at [account.squarespace.com/domains](https://account.squarespace.com/domains) and click **{domain}** (if it moved from Google Domains, sign in with that Google account)',
+    '- Click **Permissions**, then **Invite domain manager**',
+    '- Enter **{accessEmail}** and send the invite',
+    '- No "Invite domain manager" button? Invite **{accessEmail}** as a Site Administrator on your Squarespace website instead'];
+  if (/namecheap/.test(r)) return [
+    '- Sign in to Namecheap, go to **Domain List**, and click **Manage** next to {domain}',
+    '- Open the **Sharing & Transfer** tab',
+    '- Under **Share Access**, enter **{accessEmail}** and click **Add**',
+    '- Select all the access options, enter your Namecheap password, and click **Confirm**'];
+  if (/cloudflare/.test(r)) return [
+    '- Sign in to Cloudflare and go to **Manage Account → Members**',
+    '- Click **Invite** and enter **{accessEmail}**',
+    '- Choose the **Administrator** role, then **Continue to summary → Invite**'];
+  return [
+    '- Sign in to the account where {domain} is registered',
+    '- Add **{accessEmail}** as a user (sometimes called a delegate or domain manager) with access to DNS settings',
+    '- Not sure where it\'s registered, or don\'t see that option? Just let me know and I\'ll help'];
+}
+function prep(text){
+  var n = 0;
+  text = text.split('\n').map(function(line){
+    var m = line.match(/^(\[\[\w+\]\])?\{registrarSteps\}$/);
+    return m ? registrarSteps().map(function(x){ return (m[1] || '') + x; }).join('\n') : line;
+  }).join('\n');
+  return text.split('\n').filter(function(line){
+    var m = line.match(/^\[\[(\w+)\]\]/); return !m || condOk(m[1]);
+  }).map(function(line){ return line.replace(/^\[\[\w+\]\]/, ''); }).join('\n').replace(/\{#\}/g, function(){ return ++n; });
+}
+function tok(k){ return undefined; }
+function helpFor(id){ var h = HELP[id]; return typeof h === 'function' ? h(opts()) : h; }
+function visible(id){ var t = TASK[id]; return !!t && (!t.when || t.when(opts())); }
+function applyOptions(){
+  CHECKLIST.forEach(function(c){
+    c.tasks = c.all.filter(function(t){ return !t.when || t.when(opts()); });
+    c.all.forEach(function(t){ t.label = t.rawLabel.replace(/\{(\w+)\}/g, function(m, k){ return tok(k) || m; }); });
+  });
+}
+
+/* Index tasks by id and work out what each step unlocks. */
+var TASK = {}, UNLOCKS = {};
+CHECKLIST.forEach(function(cat){
+  cat.all = cat.tasks.slice();
+  cat.tasks.forEach(function(t){ t.needs = t.needs || []; t.cat = cat.name; t.rawLabel = t.label; TASK[t.id] = t; UNLOCKS[t.id] = []; });
+});
+/* Client gates: something the client does (ticked in the "Waiting on client" strip) that a step must wait for */
+var CLIENT_GATES = {
+  '@approve':  { label: 'Client approves the pages', key: 'client_review_0', after: 'review' },
+  '@formDone': { label: 'Client fills out call intake form', key: 'client_kickoff_2', after: 'kickoff' }
+};
+Object.keys(CLIENT_GATES).forEach(function(g){
+  TASK[g] = { id: g, label: CLIENT_GATES[g].label, rawLabel: CLIENT_GATES[g].label, needs: [CLIENT_GATES[g].after], cat: 'Client', gate: true };
+  UNLOCKS[g] = [];
+});
+CHECKLIST.forEach(function(cat){
+  cat.tasks.forEach(function(t){ t.needs.forEach(function(n){ if (UNLOCKS[n]) UNLOCKS[n].push(t.id); }); });
+});
+
+/* ---------- Saving: each client is one shared record on the server (/api/onboarding) ---------- */
+var API = '/api/onboarding';
+var CLIENT_ID = new URLSearchParams(location.search).get('client');
+var VIEW_KEY = 'onboardingChecklist.view';
+var data = { current: '', clients: {}, info: {}, view: (function(){ try { return localStorage.getItem(VIEW_KEY) || 'list'; } catch(e){ return 'list'; } })() };
+var synced = { checks: {}, info: {} };   /* what the server last confirmed */
+var saveTimer = null, saving = false, saveAgain = false, lastErr = false, dirty = false;
+
+function same(a, b){ return JSON.stringify(a) === JSON.stringify(b); }
+function diff(now, was){
+  var p = {}, n = 0;
+  Object.keys(now).forEach(function(k){ if (!same(now[k], was[k])){ p[k] = now[k]; n++; } });
+  Object.keys(was).forEach(function(k){ if (!(k in now)){ p[k] = null; n++; } });
+  return n ? p : null;
+}
+function setSync(text, err){ var el = $('syncState'); el.textContent = text; el.classList.toggle('err', !!err); }
+function summary(){
+  var s = state(), done = 0, total = 0, status = '';
+  CHECKLIST.forEach(function(c){
+    var d = c.tasks.filter(function(t){ return s[t.id]; }).length;
+    if (!c.ifNeeded){ total += c.tasks.length; done += d; }
+    else if (d === c.tasks.length && c.tasks.length) status = c.finish;
+  });
+  if (!status) status = done === total ? 'Live' : (done ? 'In progress' : 'Not started');
+  return { done: done, total: total, status: status };
+}
+function save(){
+  if (!CLIENT_ID) return;
+  dirty = true; setSync('Saving…');
+  clearTimeout(saveTimer);
+  saveTimer = setTimeout(flush, 500);
+}
+function flush(){
+  if (saving){ saveAgain = true; return; }
+  dirty = false;
+  var checks = JSON.parse(JSON.stringify(state())), inf = JSON.parse(JSON.stringify(info()));
+  var p = { checks: diff(checks, synced.checks), info: diff(inf, synced.info) };
+  if (!p.checks && !p.info){ setSync(lastErr ? '' : 'All changes saved'); return; }
+  saving = true;
+  fetch(API, { method: 'POST', headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ id: CLIENT_ID, patch: p, summary: summary() }) })
+    .then(function(r){ if (!r.ok) throw new Error('HTTP ' + r.status); return r.json(); })
+    .then(function(rec){
+      synced = { checks: checks, info: inf };
+      lastErr = false; saving = false;
+      adopt(rec);
+      if (saveAgain){ saveAgain = false; flush(); } else setSync('All changes saved');
+    })
+    .catch(function(){
+      saving = false; lastErr = true;
+      setSync('Not saved. Check your connection. Retrying…', true);
+      clearTimeout(saveTimer); saveTimer = setTimeout(flush, 5000);
+    });
+}
+/* Bring in changes other people made, without losing anything typed here that hasn't saved yet */
+function adopt(rec){
+  var mineC = diff(state(), synced.checks) || {}, mineI = diff(info(), synced.info) || {};
+  var c = JSON.parse(JSON.stringify(rec.checks || {})), i = JSON.parse(JSON.stringify(rec.info || {}));
+  synced = { checks: JSON.parse(JSON.stringify(c)), info: JSON.parse(JSON.stringify(i)) };
+  Object.keys(mineC).forEach(function(k){ if (mineC[k] === null) delete c[k]; else c[k] = mineC[k]; });
+  Object.keys(mineI).forEach(function(k){ if (mineI[k] === null) delete i[k]; else i[k] = mineI[k]; });
+  var changed = !same(c, state()) || !same(i, info());
+  data.current = rec.name;
+  data.clients = {}; data.clients[rec.name] = c;
+  data.info = {}; data.info[rec.name] = i;
+  return changed;
+}
+function refresh(){
+  if (!CLIENT_ID || saving || dirty) return;
+  fetch(API + '?id=' + encodeURIComponent(CLIENT_ID), { cache: 'no-store' })
+    .then(function(r){ return r.ok ? r.json() : null; })
+    .then(function(rec){
+      if (!rec || !adopt(rec)) return;
+      render();
+      /* Refresh the open step too, unless someone is typing in it */
+      var a = document.activeElement;
+      if (panel.open && !(a && panel.contains(a) && /INPUT|TEXTAREA|SELECT/.test(a.tagName))) renderPanel();
+    }).catch(function(){});
+}
+
+var $ = function(id){ return document.getElementById(id); };
+function esc(s){ return String(s).replace(/[&<>"']/g, function(c){ return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]; }); }
+function state(){ return data.clients[data.current] = data.clients[data.current] || {}; }
+function gateDone(g){ var d = (data.info && data.info[data.current]) || {}; return !!d[CLIENT_GATES[g].key]; }
+function openNeeds(id){ var s = state(); return TASK[id].needs.filter(function(n){ return visible(n) && (TASK[n].gate ? !gateDone(n) : !s[n]); }); }
+
+
+function render(){
+  applyOptions();
+  var s = state();
+  $('clientTitle').textContent = data.current;
+  var total = 0, doneTotal = 0, html = '', dividerShown = false;
+
+  CHECKLIST.forEach(function(cat, ci){
+    var d = cat.tasks.filter(function(t){ return s[t.id]; }).length;
+    if (!cat.ifNeeded){ total += cat.tasks.length; doneTotal += d; }
+    var complete = d === cat.tasks.length;
+    var started = d > 0;
+    var cls = (complete ? 'complete' : (started ? 'inprog' : '')) + (cat.ifNeeded ? ' ifneeded' : '');
+    var stateLabel = complete ? (cat.finish || 'Complete') : (started ? 'In progress' : (cat.ifNeeded ? 'Only if needed' : 'Not started'));
+    if (cat.ifNeeded && !dividerShown){ dividerShown = true; html += '<div class="divider"><span>If a client pauses or leaves</span></div>'; }
+
+    var nextId = null;
+    if (!cat.ifNeeded || started){
+      for (var k = 0; k < cat.tasks.length; k++){
+        var c = cat.tasks[k];
+        if (!s[c.id] && !openNeeds(c.id).length){ nextId = c.id; break; }
+      }
+    }
+    var tasksHTML = cat.tasks.map(function(t, ti){
+      var rec = s[t.id];
+      var waitingOn = openNeeds(t.id);
+      var status = rec ? 'done' : (waitingOn.length ? 'waiting' : (t.id === nextId ? 'open next' : 'open'));
+      var sub = t.id === nextId ? 'Next' : '';
+      if (status === 'done') sub = (rec.by ? esc(rec.by) + ' · ' : '') + esc(rec.at);
+      var aria = (noteOf(t.id) ? 'Has a note. ' : '') + t.label + ' — ' + (status === 'done' ? 'done' : status === 'waiting' ? 'locked until earlier steps are done' : 'open');
+      return '<button type="button" class="task ' + status + '" data-id="' + t.id + '" aria-label="' + esc(aria) + '" aria-pressed="' + (rec ? 'true' : 'false') + '">' +
+               '<span class="rel"></span>' +
+               (noteOf(t.id) ? '<span class="sticky" aria-hidden="true"><svg width="12" height="12" viewBox="0 0 12 12" fill="none" stroke="#7A5B00" stroke-width="1.3" stroke-linecap="round" aria-hidden="true"><path d="M3 4h6M3 6.5h6M3 9h3.5"/></svg></span>' : '') +
+               '<span class="dot">' + CHECK_SVG + LOCK_SVG + '<span class="stepnum">' + (ti + 1) + '</span></span>' +
+               '<span class="task-label">' + esc(t.label) + '</span>' +
+               '<span class="sub">' + sub + '</span>' +
+             '</button>';
+    }).join('');
+
+    html +=
+      '<section class="row ' + cls + '" aria-label="' + esc(cat.name) + '">' +
+        '<div class="row-head">' +
+          '<span class="num">' + String.fromCharCode(65 + ci) + '</span>' +
+          '<h2>' + esc(cat.name) + '</h2>' +
+          '<span class="count">' + d + ' of ' + cat.tasks.length + ' done</span>' +
+          '<span class="state">' + stateLabel + '</span>' +
+        '</div>' +
+        '<div class="track-scroll"><div class="track">' +
+          '<div class="rail"></div><div class="rail-fill"></div>' + tasksHTML +
+          '<div class="finish"><div class="flag">' + FLAG_SVG + '</div><span>' + (complete ? (cat.finish || 'Complete') : 'Finish') + '</span></div>' +
+        '</div></div>' +
+        clientStrip(cat, s) +
+      '</section>';
+  });
+
+  $('rows').innerHTML = html;
+  $('launched').classList.toggle('show', doneTotal === total);
+  layoutRails();
+  if (data.view === 'flow') renderFlow();
+}
+
+/* ---------- Flow map: every pre-launch step laid out by when it can start ---------- */
+function isOptional(id){ return CHECKLIST.some(function(c){ return c.ifNeeded && c.tasks.indexOf(TASK[id]) >= 0; }); }
+function stageOf(){
+  var memo = {};
+  function d(id){
+    if (memo[id] != null) return memo[id];
+    var n = TASK[id].needs.filter(function(x){ return visible(x) && !isOptional(x); });
+    return memo[id] = n.length ? 1 + Math.max.apply(null, n.map(d)) : 0;
+  }
+  Object.keys(TASK).forEach(function(id){ if (visible(id) && !isOptional(id)) d(id); });
+  return memo;
+}
+function codeOf(id){
+  for (var ci = 0; ci < CHECKLIST.length; ci++){ var i = CHECKLIST[ci].tasks.indexOf(TASK[id]); if (i >= 0) return String.fromCharCode(65 + ci) + (i + 1); }
+  return '';
+}
+function renderFlow(animate){
+  var s = state(), st = stageOf(), max = 0, cols = [];
+  Object.keys(st).forEach(function(id){ max = Math.max(max, st[id]); });
+  for (var i = 0; i <= max; i++) cols.push([]);
+  CHECKLIST.forEach(function(c){ c.tasks.forEach(function(t){ if (st[t.id] != null) cols[st[t.id]].push(t); }); });
+  var html = '<svg class="flow-lines" id="flowLines" aria-hidden="true"></svg>';
+  cols.forEach(function(list, i){
+    html += '<div class="flow-col' + (animate ? ' grow' : '') + '" style="animation-delay:' + (i * 45) + 'ms"><h3>Stage ' + (i + 1) + '</h3>' +
+      list.map(function(t){
+        var status = s[t.id] ? 'done' : (openNeeds(t.id).length ? 'waiting' : 'open');
+        return '<button type="button" class="fnode ' + status + '" data-id="' + t.id + '">' +
+          '<span class="fdot">' + (status === 'done' ? SMALL_CHECK : status === 'waiting' ? LOCK_SVG : '') + '</span>' +
+          '<span class="fcode">' + codeOf(t.id) + '</span><span class="flabel">' + esc(t.label) + '</span>' +
+          (noteOf(t.id) ? '<span class="sticky fsticky" aria-hidden="true"></span>' : '') + '</button>';
+      }).join('') + '</div>';
+  });
+  $('flow').innerHTML = html;
+  requestAnimationFrame(drawFlowLines);
+  if (animate) setTimeout(drawFlowLines, 60 + cols.length * 45 + 360);
+}
+function drawFlowLines(){
+  var f = $('flow'), svg = $('flowLines'); if (!f || !svg || $('flowWrap').hidden) return;
+  var box = f.getBoundingClientRect(), s = state(), p = '';
+  svg.setAttribute('width', f.scrollWidth); svg.setAttribute('height', f.scrollHeight);
+  f.querySelectorAll('.fnode').forEach(function(nodeEl){
+    var id = nodeEl.getAttribute('data-id'), b = nodeEl.getBoundingClientRect();
+    TASK[id].needs.forEach(function(n){
+      var from = f.querySelector('.fnode[data-id="' + n + '"]'); if (!from) return;
+      var a = from.getBoundingClientRect();
+      var x1 = a.right - box.left, y1 = a.top + a.height / 2 - box.top, x2 = b.left - box.left, y2 = b.top + b.height / 2 - box.top, mx = (x1 + x2) / 2;
+      p += '<path class="' + (s[n] ? 'met' : '') + '" data-from="' + n + '" data-to="' + id + '" d="M' + x1 + ',' + y1 + ' C' + mx + ',' + y1 + ' ' + mx + ',' + y2 + ' ' + x2 + ',' + y2 + '"/>';
+    });
+  });
+  svg.innerHTML = p;
+}
+function setView(v, animate){
+  data.view = v; try { localStorage.setItem(VIEW_KEY, v); } catch(e){}
+  document.querySelectorAll('.viewtoggle button').forEach(function(b){ b.setAttribute('aria-pressed', b.getAttribute('data-view') === v); });
+  $('rows').hidden = v === 'flow';
+  $('flowWrap').hidden = v !== 'flow';
+  if (v === 'flow') renderFlow(animate); else layoutRails();
+}
+document.querySelector('.viewtoggle').addEventListener('click', function(e){
+  var b = e.target.closest('button'); if (b) setView(b.getAttribute('data-view'), true);
+});
+$('flow').addEventListener('click', function(e){ var n = e.target.closest('.fnode'); if (n) openPanel(n.getAttribute('data-id')); });
+$('flow').addEventListener('mouseover', function(e){
+  var n = e.target.closest('.fnode'), f = $('flow');
+  if (!n) return;
+  var id = n.getAttribute('data-id'), t = TASK[id];
+  f.classList.add('tracing');
+  f.querySelectorAll('.fnode').forEach(function(x){
+    var xid = x.getAttribute('data-id');
+    x.classList.toggle('t-focus', xid === id);
+    x.classList.toggle('t-need', t.needs.indexOf(xid) >= 0);
+    x.classList.toggle('t-unlock', UNLOCKS[id].indexOf(xid) >= 0);
+  });
+  f.querySelectorAll('path').forEach(function(p){ p.classList.toggle('on', p.getAttribute('data-to') === id || p.getAttribute('data-from') === id); });
+});
+$('flow').addEventListener('mouseleave', function(){
+  var f = $('flow'); f.classList.remove('tracing');
+  f.querySelectorAll('.t-focus,.t-need,.t-unlock').forEach(function(x){ x.classList.remove('t-focus', 't-need', 't-unlock'); });
+  f.querySelectorAll('path.on').forEach(function(p){ p.classList.remove('on'); });
+});
+window.addEventListener('resize', drawFlowLines);
+
+function layoutRails(){
+  document.querySelectorAll('.track').forEach(function(track){
+    var nodes = track.querySelectorAll('.task, .finish'); if (!nodes.length) return;
+    var center = function(n){ return n.offsetLeft + n.offsetWidth / 2; };
+    var start = center(nodes[0]), end = center(nodes[nodes.length - 1]);
+    var rail = track.querySelector('.rail'), fill = track.querySelector('.rail-fill');
+    rail.style.left = start + 'px'; rail.style.width = (end - start) + 'px'; fill.style.left = start + 'px';
+    var tasks = track.querySelectorAll('.task'), run = 0;
+    for (var i = 0; i < tasks.length; i++){ if (tasks[i].classList.contains('done')) run = i + 1; else break; }
+    var to = run === 0 ? start : (run === tasks.length ? end : center(tasks[run]));
+    requestAnimationFrame(function(){ fill.style.width = (to - start) + 'px'; });
+  });
+}
+
+/* ---------- Hover: show what a locked step is waiting on ---------- */
+var tip = $('tip');
+var PERSON_SVG = '<svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" aria-hidden="true"><circle cx="8" cy="5.5" r="2.5"/><path d="M3 14c.6-2.8 2.6-4.3 5-4.3s4.4 1.5 5 4.3"/></svg>';
+var SMALL_CHECK = '<svg width="12" height="12" viewBox="0 0 12 12" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M2.5 6.2l2.3 2.3 4.7-5"/></svg>';
+/* "Waiting on client" strip: every client action for this row, always visible.
+   (Pause / Offboarding rows show theirs once the row has been started.) */
+function clientStrip(cat, s){
+  var d = (data.info && data.info[data.current]) || {}, items = [];
+  cat.tasks.forEach(function(t){
+    var h = helpFor(t.id); if (!h || !h.client) return;
+    h.client.forEach(function(x, i){
+      var m = x.match(/^\[\[(\w+)\]\]/); if (m && !condOk(m[1])) return;
+      items.push({ key: 'client_' + t.id + '_' + i, label: x.replace(/^\[\[\w+\]\]/, '').replace(/\{(\w+)\}/g, function(m, k){ return tok(k) || m; }), ok: !!d['client_' + t.id + '_' + i] });
+    });
+  });
+  if (!items.length) return '';
+  if (cat.ifNeeded && !cat.tasks.some(function(t){ return s[t.id]; })) return '';
+  var allOk = items.every(function(x){ return x.ok; });
+  return '<div class="strip' + (allOk ? ' all-ok' : '') + '">' +
+    '<div class="strip-head"><span class="avatar">' + PERSON_SVG + '</span><b>' + (allOk ? 'Client' : 'Waiting on client') + '</b></div>' +
+    '<div class="strip-items">' + items.map(function(x, i){
+      return (i ? '<span class="strip-sep" aria-hidden="true"></span>' : '') +
+        '<label class="citem' + (x.ok ? ' ok' : '') + '"><input type="checkbox" data-client="' + x.key + '"' + (x.ok ? ' checked' : '') + '>' +
+        '<span class="cbox">' + SMALL_CHECK + '</span><span>' + esc(x.label) + '</span></label>';
+    }).join('') + '</div></div>';
+}
+function clientLeft(id){
+  var h = helpFor(id); if (!h || !h.client) return 0;
+  var d = (data.info && data.info[data.current]) || {};
+  return h.client.filter(function(x, i){ return !d['client_' + id + '_' + i]; }).length;
+}
+function noteOf(id){ var d = data.info && data.info[data.current]; return d ? (d['note_' + id] || '').trim() : ''; }
+function showTip(btn){
+  var id = btn.getAttribute('data-id'), n = noteOf(id);
+  var waiting = state()[id] ? [] : openNeeds(id);
+  if (!waiting.length && !n){ hideTip(); return; }
+  tip.innerHTML = (n ? '<div class="tip-note"><b>Note</b>' + esc(n) + '</div>' : '') +
+    (waiting.length ? '<b>Waiting on</b><ul>' + waiting.map(function(x){ return '<li>' + esc(TASK[x].label) + '</li>'; }).join('') + '</ul>' : '');
+  var dot = btn.querySelector('.dot').getBoundingClientRect();
+  tip.style.left = Math.min(Math.max(dot.left + dot.width / 2, 150), window.innerWidth - 150) + 'px';
+  tip.style.top = (dot.top - 10) + 'px';
+  tip.classList.add('show');
+}
+function hideTip(){ tip.classList.remove('show'); }
+$('rows').addEventListener('mouseover', function(e){ var b = e.target.closest('.task'); if (b) showTip(b); else hideTip(); });
+$('rows').addEventListener('mouseleave', hideTip);
+$('rows').addEventListener('focusin', function(e){ var b = e.target.closest('.task'); if (b) showTip(b); });
+$('rows').addEventListener('focusout', hideTip);
+window.addEventListener('scroll', hideTip, true);
+
+/* ---------- Step panel ---------- */
+var panel = $('panel'), openId = null, confirmUncheck = false;
+function info(){ data.info = data.info || {}; return data.info[data.current] = data.info[data.current] || {}; }
+function fmt(key, val){
+  if (FIELDS[key] && FIELDS[key].type === 'date' && /^\d{4}-\d{2}-\d{2}$/.test(val)){
+    var p = val.split('-'); return new Date(+p[0], +p[1] - 1, +p[2]).toLocaleDateString(undefined, { weekday: 'short', month: 'short', day: 'numeric' });
+  }
+  return val;
+}
+function val(k){
+  var inf = info();
+  if (tok(k) != null) return tok(k);
+  if (k === 'emailDomain'){ var m = (inf.contactEmail || '').trim().match(/@(.+)$/); return m ? m[1].toLowerCase() : ''; }
+  if (k === 'firmName' && !(inf.firmName || '').trim()) return data.current === 'New client' ? '' : data.current;
+  return (inf[k] || '').trim();
+}
+function fill(text, blank){
+  text = prep(text);
+  var inf = info();
+  return text.replace(/\{(\w+)\}/g, function(m, k){
+    if (k === 'client') return data.current;
+    var v = val(k);
+    return v ? fmt(k, v) : (blank != null ? blank : '[' + (FIELDS[k] ? FIELDS[k].label : k) + ']');
+  });
+}
+function copyText(text, btn){
+  var done = function(){ var o = btn.textContent; btn.textContent = 'Copied'; setTimeout(function(){ btn.textContent = o; }, 1400); };
+  if (navigator.clipboard && window.isSecureContext) navigator.clipboard.writeText(text).then(done, fallback); else fallback();
+  function fallback(){ var ta = document.createElement('textarea'); ta.value = text; document.body.appendChild(ta); ta.select(); try { document.execCommand('copy'); done(); } catch(e){} ta.remove(); }
+}
+function fieldHTML(key){
+  var f = FIELDS[key], v = info()[key] || (key === 'firmName' ? val(key) : '');
+  if (f.type === 'select') return '<label class="pf"><span>' + esc(f.label) + '</span><select id="f_' + key + '" data-field="' + key + '">' +
+    '<option value="">Choose…</option>' + f.options.map(function(o){ return '<option' + (o === v ? ' selected' : '') + '>' + esc(o) + '</option>'; }).join('') + '</select></label>';
+  var input = '<input id="f_' + key + '" data-field="' + key + '" type="' + (f.type || 'text') + '" value="' + esc(v) + '" placeholder="' + esc(f.placeholder || '') + '" autocomplete="off">';
+  if (f.type === 'password') input = '<span class="pwrap">' + input + '<button class="btn pshow" type="button" data-show="f_' + key + '">Show</button></span>';
+  if (f.type === 'url' && v) input = '<span class="pwrap">' + input + '<a class="btn" href="' + esc(v) + '" target="_blank" rel="noopener" data-open="f_' + key + '">Open ↗</a></span>';
+  return '<label class="pf"><span>' + esc(f.label) + '</span>' + input + '</label>';
+}
+
+function renderPanel(){
+  var id = openId; if (!id) return;
+  var t = TASK[id], h = helpFor(id) || {}, s = state(), rec = s[id], waiting = openNeeds(id);
+  $('pCat').textContent = t.cat;
+  $('pTitle').textContent = t.label;
+  $('pStatus').innerHTML = rec ? 'Done · ' + (rec.by ? esc(rec.by) + ' · ' : '') + esc(rec.at)
+    : waiting.length ? 'Waiting on: ' + waiting.map(function(n){ return esc(TASK[n].label); }).join(', ') : '';
+  $('pStatus').style.display = $('pStatus').innerHTML ? '' : 'none';
+
+  /* Inputs: every field the tip, steps or email use. These always go first. */
+  var inputs = [];
+  var addKey = function(k){
+    if (k === 'emailDomain') k = 'contactEmail';
+    if (FIELDS[k] && !FIELDS[k].derived && inputs.indexOf(k) < 0 && (h.after || []).indexOf(k) < 0) inputs.push(k);
+  };
+  if (h.email && h.email.toField) addKey(h.email.toField);
+  if (h.email && !h.email.to && !h.email.toField){ addKey('contactName'); addKey('contactEmail'); }
+  [h.tip || '', prep((h.steps || []).join('\n')), h.email ? prep(h.email.subject + '\n' + h.email.body) : '']
+    .join('\n').replace(/\{(\w+)\}/g, function(m, k){
+      addKey(k);
+      if (k === 'domain' && /\{registrarSteps\}/.test((h.steps || []).join('\n') + (h.email ? h.email.body : ''))) addKey('registrar');
+    });
+  (h.top || []).forEach(addKey);
+  /* Outputs: things this step produces, recorded after doing it. */
+  var outputs = (h.fields || []).filter(function(k){ return inputs.indexOf(k) < 0; });
+  firstKeys = inputs;
+
+  var b = '';
+  /* A question that changes this step (domain / interview) goes first, inside the "Fill these in first" box */
+  var choiceHTML = '';
+  choiceKey = h.choice || null;
+  if (h.choice){
+    var op = OPTIONS.filter(function(x){ return x.key === h.choice; })[0], answered = info()['opt_' + op.key], cur = opts()[op.key];
+    choiceHTML = '<fieldset class="qcard"><legend>' + esc(op.question) + '</legend><div class="qopts">' +
+      op.choices.map(function(c){
+        var on = answered && cur === c[0];
+        return '<button type="button" class="qopt' + (on ? ' on' : '') + '" data-choice="' + op.key + '" data-val="' + c[0] + '" aria-pressed="' + !!on + '">' +
+          '<span class="qradio" aria-hidden="true"></span><span class="qtext"><b>' + esc(c[1]) + '</b><span>' + esc(c[2]) + '</span></span></button>';
+      }).join('') + '</div></fieldset>';
+  }
+  if (inputs.length || choiceHTML){
+    b += '<section class="pfirst" id="pFirst"><div class="pfirst-head"><span class="pfirst-title"><svg width="20" height="20" viewBox="0 0 20 20" aria-hidden="true"><circle cx="10" cy="10" r="10" fill="#2E7D4F"/><path d="M5.5 10.3l3 3 6-6.3" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg><span id="pFirstTitle">Fill these in first</span></span><span class="pfirst-count" id="pFirstCount"></span></div>' +
+         choiceHTML + (inputs.length ? '<div class="pfirst-grid">' + inputs.map(fieldHTML).join('') + '</div>' : '') + '</section>';
+  }
+  if (h.tip) b += '<p class="ptip" id="pTip"></p>';
+  if (h.steps) b += '<div class="psteps" id="pSteps"></div>';
+  if (h.links) b += '<div class="plinks">' + h.links.map(function(l){
+    return '<a href="' + esc(l[1]) + '" target="_blank" rel="noopener">' + esc(l[0]) + ' ↗</a>';
+  }).join('') + '</div>';
+  if (h.email){
+    tplDirty = false;
+    b += '<div class="tpl">' + (h.email.to ? '<div class="tpl-to"><span>To</span> ' + esc(h.email.toName || '') + ' &lt;' + esc(h.email.to) + '&gt;</div>' : '') +
+         (h.email.toField ? '<div class="tpl-to"><span>To</span> ' + esc(FIELDS[h.email.toField].label) + '</div>' : '') +
+         '<input class="tpl-subj" id="tplSubj" aria-label="Email subject">' +
+         '<div class="tpl-body" id="tplBody" contenteditable="true" role="textbox" aria-multiline="true" aria-label="Email body"></div>' +
+         '<div class="tpl-actions"><button class="btn primary" type="button" id="tplMail">Open in Gmail</button>' +
+         '<button class="btn" type="button" id="tplCopy">Copy email</button>' +
+         '<span class="tpl-note" id="tplNote" role="status"></span>' +
+         '<button class="tpl-reset" type="button" id="tplReset" hidden>Reset to template</button></div></div>';
+  }
+  if (outputs.length) b += '<div class="pfields">' + outputs.map(fieldHTML).join('') + '</div>';
+  b += '<textarea class="pnotes" data-field="note_' + id + '" rows="2" placeholder="Notes">' + esc(info()['note_' + id] || '') + '</textarea>';
+  $('pBody').innerHTML = b;
+  renderLive();
+
+  $('pFoot').innerHTML = rec
+    ? (confirmUncheck
+        ? '<div class="uncheck-confirm" role="alert"><span>Uncheck this step? This removes ' + esc(rec.by || 'the') + '\'s check-off from ' + esc(rec.at) + '.</span>' +
+          '<button class="btn" type="button" id="pUncheckCancel">Cancel</button><button class="btn danger" type="button" id="pUncheck">Yes, uncheck</button></div>'
+        : '<button class="btn" type="button" id="pUncheck">Uncheck</button>')
+    : waiting.length ? '<button class="btn primary" type="button" disabled>Check off</button>'
+    : '<input id="pInitials" class="initials" type="text" maxlength="4" autocomplete="off" placeholder="Initials" aria-label="Your initials">' +
+      '<button class="btn primary" type="button" id="pCheck">Check off</button><p class="err" id="pErr" role="alert"></p>';
+}
+
+/* Parts that update as fields are typed in */
+var firstKeys = [], choiceKey = null;
+function renderLive(){
+  var h = helpFor(openId); if (!h) return;
+  if ($('pFirst')){
+    var left = firstKeys.filter(function(k){ return !val(k); });
+    if (choiceKey && !info()['opt_' + choiceKey]) left.push('choice');
+    firstKeys.forEach(function(k){ var el = $('f_' + k); if (el) el.classList.toggle('empty', !val(k)); });
+    $('pFirst').classList.toggle('done', !left.length);
+    $('pFirstCount').textContent = left.length ? left.length + ' left' : '';
+    $('pFirstTitle').textContent = left.length ? 'Fill these in first' : 'All filled in. Double-check these before ' + (h.email ? 'sending' : 'continuing');
+  }
+  if (h.tip && $('pTip')) $('pTip').textContent = fill(h.tip);
+  if (h.steps && $('pSteps')) $('pSteps').innerHTML = toHTML(h.steps.join('\n'));
+  if (!h.email || !$('tplBody') || tplDirty) return;
+  $('tplSubj').value = fill(h.email.subject);
+  $('tplBody').innerHTML = toHTML(h.email.body);
+  sizeTpl();
+}
+function sizeTpl(){}
+
+/* Turn a template into Gmail-friendly HTML.
+   **bold**, [link text](url), lines starting "- " become bullets. */
+function toHTML(text){
+  text = prep(text);
+  var inf = info(), M1 = '\u0001', M2 = '\u0002';
+  var t = text.replace(/\{(\w+)\}/g, function(m, k){
+    if (k === 'client') return data.current;
+    var v = val(k);
+    return v ? fmt(k, v) : M1 + (FIELDS[k] ? FIELDS[k].label : k) + M2;
+  });
+  t = esc(t);
+  var miss = function(str){ return str.replace(/\u0001([^\u0002]*)\u0002/g, '<span class="miss">[$1]</span>'); };
+  var inline = function(str){
+    str = str.replace(/\[([^\]]+)\]\(([^)]*)\)/g, function(m, label, url){
+      return url.indexOf(M1) >= 0 ? label + ' ' + miss(url) : '<a href="' + url + '" target="_blank" rel="noopener">' + label + '</a>';
+    });
+    str = str.replace(/\*\*(.+?)\*\*/g, '<b>$1</b>');
+    str = str.replace(/!!(.+?)!!/g, '<span class="warn">$1</span>');
+    return miss(str);
+  };
+  var out = '', list = false;
+  t.split('\n').forEach(function(line){
+    if (/^- /.test(line)){ if (!list){ out += '<ul>'; list = true; } out += '<li>' + inline(line.slice(2)) + '</li>'; return; }
+    if (list){ out += '</ul>'; list = false; }
+    out += line.trim() ? '<div>' + inline(line) + '</div>' : '<div><br></div>';
+  });
+  if (list) out += '</ul>';
+  return out;
+}
+
+/* Clean copy of the editor for the clipboard: no page styles, so it pastes like native Gmail text. */
+function emailHTML(){
+  var c = $('tplBody').cloneNode(true);
+  c.querySelectorAll('.miss').forEach(function(s){ s.replaceWith(document.createTextNode(s.textContent)); });
+  c.querySelectorAll('*').forEach(function(el){ el.removeAttribute('style'); el.removeAttribute('class'); });
+  return c.innerHTML;
+}
+function copyEmail(done){
+  var html = emailHTML(), plain = $('tplBody').innerText;
+  if (window.ClipboardItem && navigator.clipboard && navigator.clipboard.write){
+    navigator.clipboard.write([new ClipboardItem({ 'text/html': new Blob([html], { type: 'text/html' }), 'text/plain': new Blob([plain], { type: 'text/plain' }) })])
+      .then(done, fallback);
+  } else fallback();
+  function fallback(){
+    var box = document.createElement('div'); box.innerHTML = html; box.style.cssText = 'position:fixed;left:-9999px;top:0;font-family:Arial,sans-serif;font-size:14px;color:#222';
+    document.body.appendChild(box);
+    var r = document.createRange(); r.selectNodeContents(box); var sel = getSelection(); sel.removeAllRanges(); sel.addRange(r);
+    try { document.execCommand('copy'); } catch(e){}
+    sel.removeAllRanges(); box.remove(); done();
+  }
+}
+/* Plain-text version for the Gmail draft: bullets become •, links become "text (link)". */
+function plainEmail(){
+  var c = $('tplBody').cloneNode(true);
+  c.querySelectorAll('.miss').forEach(function(x){ x.replaceWith(document.createTextNode(x.textContent)); });
+  c.querySelectorAll('a').forEach(function(a){
+    var href = a.getAttribute('href') || '', txt = a.textContent;
+    a.replaceWith(document.createTextNode(href && href !== txt ? txt + ' (' + href + ')' : txt));
+  });
+  c.querySelectorAll('li').forEach(function(li){ li.insertBefore(document.createTextNode('• '), li.firstChild); });
+  c.style.cssText = 'position:fixed;left:-9999px;top:0;white-space:normal';
+  document.body.appendChild(c);
+  var txt = c.innerText.replace(/\n{3,}/g, '\n\n').trim();
+  c.remove();
+  return txt;
+}
+function note(msg){ var n = $('tplNote'); if (!n) return; n.textContent = msg; clearTimeout(note.t); note.t = setTimeout(function(){ n.textContent = ''; }, 6000); }
+var tplDirty = false;
+
+function openPanel(id){ openId = id; confirmUncheck = false; renderPanel(); if (!panel.open) panel.showModal(); sizeTpl(); $('pBody').scrollTop = 0; }
+function closePanel(){
+  panel.close();
+  var again = openId && document.querySelector('.task[data-id="' + openId + '"]');
+  openId = null; if (again) again.focus();
+}
+$('rows').addEventListener('change', function(e){
+  var k = e.target.getAttribute('data-client'); if (!k) return;
+  if (e.target.checked) info()[k] = true; else delete info()[k];
+  save(); render();
+});
+$('pBody').addEventListener('input', function(e){
+  if (e.target.id === 'tplSubj' || e.target.id === 'tplBody'){ tplDirty = true; $('tplReset').hidden = false; return; }
+  var k = e.target.getAttribute('data-field'); if (!k) return;
+  info()[k] = e.target.value; save(); renderLive();
+  if (k.indexOf('note_') === 0 || k === 'launchTarget') render();
+});
+$('pFoot').addEventListener('click', function(e){
+  var s = state();
+  if (e.target.id === 'pCheck'){
+    var ini = ($('pInitials').value || '').trim().toUpperCase();
+    if (!/^[A-Z]{2,4}$/.test(ini)){ $('pErr').textContent = 'Enter your initials to check this off.'; $('pInitials').focus(); return; }
+    s[openId] = { by: ini, at: new Date().toLocaleDateString(undefined, { month: 'short', day: 'numeric' }) };
+    save(); render(); renderPanel();
+  } else if (e.target.id === 'pUncheckCancel'){
+    confirmUncheck = false; renderPanel();
+  } else if (e.target.id === 'pUncheck'){
+    if (!confirmUncheck){ confirmUncheck = true; renderPanel(); return; }
+    delete s[openId]; confirmUncheck = false; save(); render(); renderPanel();
+  }
+});
+$('pFoot').addEventListener('keydown', function(e){ if (e.key === 'Enter' && e.target.id === 'pInitials'){ e.preventDefault(); $('pCheck').click(); } });
+$('pBody').addEventListener('click', function(e){
+  var ch = e.target.closest && e.target.closest('button[data-choice]');
+  if (ch){
+    var key = ch.getAttribute('data-choice'), v = ch.getAttribute('data-val');
+    info()['opt_' + key] = v;
+    /* Interview already done: check the interview step off automatically, so nothing is left hanging */
+    if (key === 'interview'){
+      var st = state();
+      if (v === 'done' && !st.interview) st.interview = { by: '', at: 'Done before kickoff', auto: true };
+      if (v === 'todo' && st.interview && st.interview.auto) delete st.interview;
+    }
+    save(); render(); renderPanel(); return;
+  }
+  var sh = e.target.getAttribute && e.target.getAttribute('data-show');
+  if (sh){ e.preventDefault(); var inp = $(sh); var hidden = inp.type === 'password'; inp.type = hidden ? 'text' : 'password'; e.target.textContent = hidden ? 'Hide' : 'Show'; return; }
+  if (e.target.id === 'tplCopy') copyEmail(function(){ note('Copied. Paste it into Gmail.'); });
+  else if (e.target.id === 'tplMail'){
+    var url = 'https://mail.google.com/mail/?view=cm&fs=1&to=' + encodeURIComponent((function(e){ return e.to || (e.toField ? val(e.toField) : '') || info().contactEmail || ''; })(helpFor(openId).email || {}).trim()) +
+              '&su=' + encodeURIComponent($('tplSubj').value) + '&body=' + encodeURIComponent(plainEmail());
+    var win = window.open(url, '_blank');
+    if (!win) note('Pop-up blocked. Allow pop-ups for this page, or use Copy email.');
+  }
+  else if (e.target.id === 'tplReset'){ tplDirty = false; e.target.hidden = true; renderLive(); }
+});
+$('pClose').addEventListener('click', closePanel);
+panel.addEventListener('cancel', function(e){ e.preventDefault(); closePanel(); });
+panel.addEventListener('click', function(e){ if (e.target === panel) closePanel(); });
+$('rows').addEventListener('click', function(e){ var b = e.target.closest('.task'); hideTip(); if (b) openPanel(b.getAttribute('data-id')); });
+
+/* ---------- Clients ---------- */
+function slug(s){ return s.toLowerCase().replace(/&/g, ' and ').replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '').slice(0, 50) || 'client'; }
+function clientURL(id){ return location.origin + location.pathname + '?client=' + encodeURIComponent(id); }
+$('addToggle').addEventListener('click', function(){ $('addRow').classList.toggle('open'); $('newClient').focus(); });
+function addClient(){
+  var name = $('newClient').value.trim(); if (!name) return;
+  var id = slug(name) + '-' + Date.now().toString(36);
+  $('addClient').disabled = true;
+  fetch(API, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ id: id, name: name, create: true }) })
+    .then(function(r){ if (!r.ok) throw new Error(); location.href = clientURL(id); })
+    .catch(function(){ $('addClient').disabled = false; alertHome('Couldn\'t create the client. Check your connection and try again.'); });
+}
+$('addClient').addEventListener('click', addClient);
+$('newClient').addEventListener('keydown', function(e){ if (e.key === 'Enter') addClient(); });
+$('copyLink').addEventListener('click', function(){
+  var b = this, url = clientURL(CLIENT_ID);
+  (navigator.clipboard ? navigator.clipboard.writeText(url) : Promise.reject()).then(function(){
+    b.textContent = 'Copied ✓'; setTimeout(function(){ b.textContent = 'Copy client link'; }, 1600);
+  }).catch(function(){ prompt('Copy this link:', url); });
+});
+function alertHome(msg){ $('homeList').innerHTML = '<div class="home-empty">' + esc(msg) + '</div>'; }
+
+function bootHome(){
+  document.body.classList.add('home');
+  $('clientTitle').textContent = 'All clients';
+  fetch(API, { cache: 'no-store' })
+    .then(function(r){ if (!r.ok) throw new Error(); return r.json(); })
+    .then(function(list){
+      if (!list.length){ alertHome('No clients yet. Click "+ New client" to start one.'); return; }
+      list.sort(function(a, b){ return (b.updated || b.created || 0) - (a.updated || a.created || 0); });
+      $('homeList').innerHTML = list.map(function(c){
+        var s = c.summary || {}, pct = s.total ? Math.round(100 * s.done / s.total) : 0;
+        return '<a class="home-item" href="' + esc(clientURL(c.id)) + '">' +
+          '<span class="home-name">' + esc(c.name) + '</span>' +
+          '<span class="home-meta">' + esc(s.status || 'Not started') + (s.total ? ' · ' + s.done + ' of ' + s.total : '') + '</span>' +
+          '<span class="home-bar" aria-hidden="true"><span style="width:' + pct + '%"></span></span></a>';
+      }).join('');
+    })
+    .catch(function(){ alertHome('Couldn\'t load clients. Check your connection and refresh.'); });
+}
+function bootClient(){
+  fetch(API + '?id=' + encodeURIComponent(CLIENT_ID), { cache: 'no-store' })
+    .then(function(r){ if (r.status === 404) throw new Error('missing'); if (!r.ok) throw new Error(); return r.json(); })
+    .then(function(rec){
+      adopt(rec);
+      document.title = rec.name + ' · Onboarding';
+      render(); setView(data.view || 'list');
+      setInterval(refresh, 15000);
+      document.addEventListener('visibilitychange', function(){ if (!document.hidden) refresh(); });
+    })
+    .catch(function(e){
+      $('clientTitle').textContent = e.message === 'missing' ? 'Client not found' : 'Couldn\'t load this client';
+      setSync(e.message === 'missing' ? 'Check the link, or go back to All clients.' : 'Check your connection and refresh.', true);
+    });
+}
+window.addEventListener('resize', function(){ if (CLIENT_ID) layoutRails(); });
+document.fonts && document.fonts.ready.then(function(){ if (CLIENT_ID) layoutRails(); });
+window.addEventListener('beforeunload', function(e){ if (saving || dirty || lastErr){ flush(); e.preventDefault(); e.returnValue = ''; } });
+
+if (CLIENT_ID) bootClient(); else bootHome();
+</script>
+</body>
+</html>
