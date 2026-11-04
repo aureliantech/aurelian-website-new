@@ -39,6 +39,13 @@
   .home-list{display:flex;flex-direction:column;gap:8px}
   .home-item{display:flex;align-items:center;gap:16px;background:var(--card);border:1px solid var(--line);border-radius:12px;padding:16px 20px;text-decoration:none;color:var(--ink)}
   .home-item:hover{border-color:var(--accent)}
+  .home-row{display:flex;align-items:stretch;gap:8px}
+  .home-row .home-item{flex:1;min-width:0}
+  .home-del{flex:none;border:1px solid var(--line);background:var(--card);border-radius:12px;padding:0 16px;font:inherit;font-size:13px;color:var(--muted);cursor:pointer}
+  .home-del:hover{color:#B42318;border-color:#B42318}
+  .home-del:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+  .home-confirm{flex:none;display:flex;align-items:center;gap:8px;background:#FEF3F2;border:1px solid #F4C7C3;border-radius:12px;padding:8px 12px;font-size:13px;color:#7A271A}
+  .home-confirm .btn{height:36px;padding:0 12px;font-size:13px}
   .home-item:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
   .home-name{font-size:16px;font-weight:600;flex:1;min-width:0}
   .home-meta{font-size:13px;color:var(--muted);white-space:nowrap}
@@ -216,6 +223,12 @@
   .psteps ul{margin:2px 0 0;padding-left:20px}
   .psteps a{color:var(--accent)}
   .psteps .warn{color:#B42318;font-weight:600}
+  .psteps code.val{font-family:var(--mono);font-size:13px;background:#fff;border:1px solid #C9CED8;border-radius:5px;padding:1px 7px;white-space:pre}
+  .psteps .copyval{margin-left:6px;font:inherit;font-size:12px;color:var(--accent);background:none;border:1px solid #C9CED8;border-radius:5px;padding:0 7px;cursor:pointer;line-height:20px}
+  .psteps .copyval:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+  .psteps .codeblock{position:relative;margin:6px 0 4px;background:#fff;border:1px solid #C9CED8;border-radius:8px}
+  .psteps .codeblock pre{margin:0;padding:12px 14px 44px;font-family:var(--mono);font-size:12.5px;line-height:19px;white-space:pre-wrap;word-break:break-word;max-height:260px;overflow:auto}
+  .psteps .codeblock .copyval{position:absolute;right:10px;bottom:10px;margin:0;background:#fff;font-size:13px;padding:2px 10px}
   .psteps .miss{background:#FFF1C2;border-radius:3px;padding:0 2px}
   .ptip{margin:0;font-size:14px;line-height:21px;color:var(--ink)}
   .plinks{display:flex;flex-wrap:wrap;gap:8px}
@@ -367,13 +380,15 @@ var CHECKLIST = [
     { id: 'review',     label: 'Send pages to client for review', needs: ['build'] } ]},
   { name: 'Website', tasks: [
     { id: 'domain',        label: 'Get domain access or buy domain' },
+    { id: 'cfSettings',    label: 'Set up Cloudflare settings', needs: ['domain'], when: function(o){ return o.domain === 'buy'; } },
+    { id: 'tempHome',      label: 'Put simple homepage on domain', needs: ['domain'], when: function(o){ return o.domain === 'buy'; } },
     { id: 'build',         label: 'Build website / landing pages', needs: ['interview', 'kickoff'] },
     { id: 'siteIntakeNum', label: 'Add call intake phone number to pages', needs: ['build', 'intakeNum'] },
     { id: 'siteCode',      label: 'Install CallRail number swap code', needs: ['siteIntakeNum', 'callrail'] },
     { id: 'connectDomain', label: 'Connect approved pages to domain', needs: ['review', '@approve', 'domain', 'siteCode'] } ]},
   { name: 'Ads', tasks: [
     { id: 'research',    label: 'Complete ad research' },
-    { id: 'createAds',   label: 'Create ads', needs: ['research'] },
+    { id: 'createAds',   label: 'Create ads', needs: ['research', 'tempHome'] },
     { id: 'adsCallRail', label: 'Add CallRail number to ads', needs: ['createAds', 'callrail'] },
     { id: 'linkAds',     label: 'Connect ads to landing pages', needs: ['createAds', 'connectDomain'] } ]},
   { name: 'Analytics', tasks: [
@@ -423,6 +438,7 @@ var FIELDS = {
   contactName:    { label: 'Client contact name' },
   contactEmail:   { label: 'Client contact email', type: 'email' },
   emailDomain:    { label: 'Firm email domain', derived: true },
+  repoName:       { label: 'Repo name', derived: true },
   reviewBy:       { label: 'Pages ready for review by', type: 'date' },
   launchTarget:   { label: 'Target launch date', type: 'date' },
   adsCustomerId:  { label: 'Google Ads customer ID', placeholder: '123-456-7890' },
@@ -459,6 +475,7 @@ function domainHelp(o){
       '- Pick a short, easy-to-say domain for **{firmName}** (a .com if you can get one)',
       '- Buy it on Cloudflare and turn on auto-renew so it never lapses',
       '- Enter the domain you bought in the box below',
+      '',
       '- !!Only check this off once the purchase is complete and the domain shows in your Cloudflare account.!!'
     ] };
   return {
@@ -594,6 +611,133 @@ var HELP = {
                 email: { subject: 'Your new pages are ready to review', body: 'Hi {contactName},\n\nGood news: [your new pages are ready to review]({previewUrl})!\n\nTake a look and reply with any changes, big or small. If everything looks good, just reply **"Approved"** and we\'ll get them live.\n\nThanks!' } },
 
   domain:        function(o){ var h = domainHelp(o); h.choice = 'domain'; return h; },
+  cfSettings:    { top: ['domain'], links: [['Cloudflare', 'https://dash.cloudflare.com']], steps: [
+                   '**On the domain\'s registration page** (Domains → Registrations → {domain} → Settings tab)',
+                   '- **DNSSEC: on.** Click Enable DNSSEC. It shows "Pending" for 1–2 days, then turns active. Stops anyone faking the DNS',
+                   '- **Auto-renew: on.** Check it on the Overview tab',
+                   '',
+                   '**On the domain\'s own dashboard** (Domains → Overview → click {domain})',
+                   '- Don\'t see {domain} in the list? Hard refresh the page (Cmd + Shift + R). New domains can take a minute to show up',
+                   '- Ignore the switches and Activate buttons on this Overview page. Leave them as they are',
+                   '- **SSL/TLS: Full (strict).** In the left sidebar, click **SSL/TLS → Overview**. Click **Configure**, select **Full (Strict)** (not Full, not Automatic), then click **Save**. !!Never pick Flexible. It causes endless redirects with Vercel.!!',
+                   '- **Leave "Always Use HTTPS" and HSTS off.** Vercel already handles HTTPS',
+                   '',
+                   '**Block fake emails** (skip this if the firm might send email from {domain})',
+                   '- In the left sidebar, click **DNS → Records**',
+                   '',
+                   '**First record**',
+                   '- Click **Add record**',
+                   '- Type: pick **TXT** from the dropdown',
+                   '- Name: `@`',
+                   '- Content: `v=spf1 -all`',
+                   '- TTL: leave it on Auto',
+                   '- Click **Save**',
+                   '',
+                   '**Second record**',
+                   '- Click **Add record** again',
+                   '- Type: pick **TXT** from the dropdown',
+                   '- Name: `_dmarc`',
+                   '- Content: `v=DMARC1; p=reject;` (the semicolons are part of it)',
+                   '- TTL: leave it on Auto',
+                   '- Click **Save**',
+                   '',
+                   '**Check**',
+                   '- Both TXT records now show in the list. These stop scammers from sending email that looks like it came from the firm',
+                   '- The DNS page shows "Visitors cannot reach…" recommendations. Ignore them for now. They go away once you add the Vercel records in the next step'
+                 ] },
+  tempHome:      { top: ['firmName', 'domain'], links: [['Cloudflare', 'https://dash.cloudflare.com'], ['Vercel', 'https://vercel.com/dashboard']],
+                   tip: 'A bare-bones homepage so the ads person has a working page to build ads with. The real pages replace it later.',
+                   steps: [
+                     '**1. Make the page**',
+                     '- Copy this prompt into Claude and download the file it gives you. Any name is fine (like "index - 2026-11-04T150847.614.html")',
+                     '```Copy prompt',
+                     'Create a single-file HTML homepage for a law firm called "{firmName}".',
+                     '',
+                     'Keep it as minimal as possible:',
+                     '- Show the firm name as the main heading.',
+                     '- Under it, one short, generic sentence saying it\'s a law firm, e.g. "{firmName} is a law firm dedicated to serving its clients."',
+                     '- A footer with "© [current year] {firmName}. All rights reserved." and this line in small text: "The information on this website is for general information only and does not create an attorney-client relationship."',
+                     '',
+                     'Do NOT include:',
+                     '- Practice areas, services, locations, attorney names, phone numbers, emails or addresses',
+                     '- Any claims or promises (no "best", "experienced", "results", "guaranteed", reviews or testimonials)',
+                     '- Contact forms, buttons, links, menus or images',
+                     '- "Coming soon" or "Under construction" wording',
+                     '- Tracking, analytics, cookies, scripts or external fonts',
+                     '',
+                     'Design: clean and professional. White background, dark text, centered on the page, system font, works on mobile. All CSS inside the file. Give me only the complete HTML file named index.html.',
+                     '```',
+                     '',
+                     '**2. Put it on GitHub (Terminal)**',
+                     '- First time on this Mac? Do the **one-time setup** at the bottom first',
+                     '- Right after downloading, open Terminal, paste this, and press Enter. It grabs the newest file in Downloads whose name starts with "index"',
+                     '```Copy commands',
+                     'mkdir -p ~/Downloads/client-sites/{repoName}',
+                     'cd ~/Downloads/client-sites/{repoName}',
+                     'f="$(ls -t ~/Downloads/index*.html | head -1)"; echo "Using: $f"; mv "$f" index.html',
+                     'git init -b main',
+                     'git add index.html',
+                     'git commit -m "Simple homepage"',
+                     'gh repo create aureliantech/{repoName} --private --source=. --push',
+                     '```',
+                     '- Check the "Using:" line is the file you just downloaded',
+                     '- It should end with **✓ Pushed commits**',
+                     '',
+                     '**3. Publish it on Vercel and add the domain (Terminal)**',
+                     '- In the same Terminal window, paste this and press Enter',
+                     '```Copy commands',
+                     'cd ~/Downloads/client-sites/{repoName}',
+                     'vercel --prod --yes',
+                     'vercel domains add {domain} {repoName}',
+                     'vercel domains add www.{domain} {repoName}',
+                     'for d in {domain} www.{domain}; do vercel domains verify "$d" 2>&1 | tee /dev/tty | grep -o "https://vercel.com/api/[^[:space:]]*domain-connect/apply[^[:space:]]*" | head -1 | while read -r u; do open "$u"; done; done',
+                     '```',
+                     '- It publishes the page, links it to GitHub, adds both versions of the domain, and opens two Cloudflare tabs in your browser',
+                     '- Open the link ending in **.vercel.app** to check the page looks right',
+                     '- "Invalid Configuration" at the end is normal. Step 4 fixes it',
+                     '',
+                     '**4. Connect the domain in Cloudflare**',
+                     '- **Two** Cloudflare tabs or windows open in your browser: one for **{domain}** and one for **www.{domain}**',
+                     '- !!Approve both. The second one often opens behind the first, so look for it.!!',
+                     '- After approving, you land on the project\'s Domains page in Vercel. A blue check with "Generating SSL Certificate" means it worked. That takes a few minutes',
+                     '- One domain still says **Invalid Configuration**? You probably missed the second tab. Find it and approve it, then click **Refresh** on that row',
+                     '- No tabs opened? Copy the links under **"Auto configure with Cloudflare using Domain Connect"** from the Terminal output into your browser instead',
+                     '- Then open {domain} in Cloudflare → **DNS → Records**. You should see two **CNAME** records (**@** and **www**)',
+                     '- !!Both must say DNS only (gray cloud). If either shows an orange cloud, click Edit, switch Proxy status off, and Save.!!',
+                     '',
+                     '**No auto-configure links? Add the records by hand instead**',
+                     '- In Cloudflare → **DNS → Records**, click **Add record**',
+                     '- Type: pick **CNAME**. Name: `@`. Target: the CNAME value from the Terminal output (leave off the dot at the end). Proxy status: off. Click **Save**',
+                     '- Click **Add record** again',
+                     '- Type: pick **CNAME**. Name: `www`. Target: the same value. Proxy status: off. Click **Save**',
+                     '',
+                     '**5. Check it\'s live**',
+                     '- Wait a few minutes, then paste this in Terminal',
+                     '```Copy commands',
+                     'vercel domains verify {domain}',
+                     'vercel domains verify www.{domain}',
+                     '```',
+                     '- When both say the configuration is valid, open https://{domain} and check for the padlock',
+                     '- Still invalid? Wait a few more minutes and run it again',
+                     '- Send the ads person this as the landing page for now: `https://{domain}`',
+                     '- !!Only check this off once https://{domain} loads with the padlock.!!',
+                     '',
+                     '**One-time setup (only the first time on a Mac)**',
+                     '```Copy setup',
+                     'brew install gh',
+                     'gh auth login',
+                     'npm install -g vercel',
+                     'vercel login',
+                     'vercel switch',
+                     '```',
+                     '- **gh auth login**: pick GitHub.com → HTTPS → Login with a web browser',
+                     '- **npm install -g vercel**: can take about 5 minutes. A spinning ⠸ means it\'s still working',
+                     '- **vercel login**: open the link it shows and sign in',
+                     '- **vercel switch**: pick **aureliantech\'s projects** and press Enter ("No changes made" is fine)',
+                     '- "command not found: brew"? Install Homebrew from [brew.sh](https://brew.sh) first',
+                     '- **git commit** says "Please tell me who you are"? Run `git config --global user.name "Aurelian"` and `git config --global user.email "you@aureliantech.co"` (your real email), then paste the GitHub block again',
+                     '- Permission error on npm? Run `sudo npm install -g vercel` and enter your Mac password'
+                   ] },
   build:         { fields: ['previewUrl'] },
   siteIntakeNum: { steps: [
                    '- Put **{intakeNumber}** on every call button and visible number',
@@ -605,11 +749,42 @@ var HELP = {
                    '- Install it on every page',
                    '- Check that the call intake number swaps to a CallRail number when you view a page'
                  ] },
-  connectDomain: { tip: 'Approved {approvedOn} · {domain} at {registrar}' },
+  connectDomain: function(o){
+                   if (o.domain !== 'buy') return { tip: 'Approved {approvedOn} · {domain} at {registrar}' };
+                   return { tip: 'Approved {approvedOn} · {domain}', links: [['Vercel', 'https://vercel.com/dashboard']], steps: [
+                     '- {domain} is already live on Vercel with the simple homepage (B3), in the **{repoName}** project',
+                     '',
+                     '**If the approved pages go in the same project (simplest)**',
+                     '- Put the page files in **~/Downloads/client-sites/{repoName}** (replacing the simple index.html), then paste this in Terminal',
+                     '```Copy commands',
+                     'cd ~/Downloads/client-sites/{repoName}',
+                     'git add -A',
+                     'git commit -m "Approved pages"',
+                     'git push',
+                     '```',
+                     '- Vercel publishes automatically within a minute. Nothing changes in Cloudflare',
+                     '',
+                     '**If the approved pages are in a different Vercel project**',
+                     '- In the **{repoName}** project, go to **Settings → Domains** and remove **{domain}** and **www.{domain}**',
+                     '- Add both to the pages\' project, then approve the two Cloudflare tabs again (or update both CNAME records to the new target Vercel shows)',
+                     '- !!The CNAME target can be different for the new project. Use what Vercel shows, then check both domains say Valid Configuration.!!',
+                     '',
+                     '**Either way**',
+                     '- Keep the Cloudflare records on **gray cloud (DNS only)**',
+                     '- !!Only check this off once https://{domain} and every landing page load with the padlock.!!'
+                   ] };
+                 },
 
   research:    { links: [ADS, ['Ads Transparency Center', 'https://adstransparency.google.com']] },
-  createAds:   { links: [ADS] },
-  linkAds:     { tip: 'Domain: {domain}', links: [ADS] },
+  createAds:   { links: [ADS], steps: [
+                   '- Use **https://{domain}** as the landing page for now. The real landing pages get swapped in at C4',
+                   '- Keep the ads paused until launch'
+                 ] },
+  linkAds:     { tip: 'Domain: {domain}', links: [ADS], steps: [
+                   '- Change each ad\'s final URL from **https://{domain}** to the right approved landing page on the same domain (like {domain}/practice-area)',
+                   '- Google re-checks ads after the change. That\'s normal and usually quick',
+                   '- !!Only check this off once every ad points to a landing page and none are disapproved.!!'
+                 ] },
   adsVerify:   { links: [ADS], steps: [
                  '- In Google Ads, go to Billing → **Advertiser verification**',
                  '- Enter the firm\'s legal name and details exactly as registered',
@@ -717,7 +892,14 @@ var HELP = {
 
   oDate:     { client: ['Pay final invoice'], fields: ['endDate'] },
   oAds:      { links: [ADS] },
-  oSite:     { client: ['Confirm they have website + domain access'] },
+  oSite:     { client: ['Confirm they have website + domain access'], steps: [
+                 '[[buyDomain]]**If we bought {domain} and the client is taking it**',
+                 '[[buyDomain]]- In Cloudflare, turn off DNSSEC first (Domains → Registrations → {domain} → Settings → Disable DNSSEC)',
+                 '[[buyDomain]]- Wait 1–2 days, then transfer the domain to the client',
+                 '[[buyDomain]]- !!Moving it with DNSSEC still on can take the site down.!!',
+                 '[[buyDomain]]- Once the client has the domain, remove it from the Vercel project (**Settings → Domains**) so nothing points at our hosting',
+                 '[[theirDomain]]- Remove our access from their domain account, or ask them to'
+               ] },
   oCallRail: { client: ['Decide: keep or release tracking numbers'], tip: 'Port to the client if they want to keep them, otherwise release.', links: [CALLRAIL] },
   oIntake:   {},
   oAccess:   { links: [ADS, GA4, GSC] },
@@ -1119,6 +1301,7 @@ function fmt(key, val){
 function val(k){
   var inf = info();
   if (tok(k) != null) return tok(k);
+  if (k === 'repoName'){ var dm = (inf.domain || '').trim().toLowerCase(); return dm ? dm.replace(/[^a-z0-9]+/g, '-') : ''; }
   if (k === 'emailDomain'){ var m = (inf.contactEmail || '').trim().match(/@(.+)$/); return m ? m[1].toLowerCase() : ''; }
   if (k === 'firmName' && !(inf.firmName || '').trim()) return data.current === 'New client' ? '' : data.current;
   return (inf[k] || '').trim();
@@ -1160,6 +1343,7 @@ function renderPanel(){
   var inputs = [];
   var addKey = function(k){
     if (k === 'emailDomain') k = 'contactEmail';
+    if (k === 'repoName') k = 'domain';
     if (FIELDS[k] && !FIELDS[k].derived && inputs.indexOf(k) < 0 && (h.after || []).indexOf(k) < 0) inputs.push(k);
   };
   if (h.email && h.email.toField) addKey(h.email.toField);
@@ -1214,12 +1398,11 @@ function renderPanel(){
 
   $('pFoot').innerHTML = rec
     ? (confirmUncheck
-        ? '<div class="uncheck-confirm" role="alert"><span>Uncheck this step? This removes ' + esc(rec.by || 'the') + '\'s check-off from ' + esc(rec.at) + '.</span>' +
+        ? '<div class="uncheck-confirm" role="alert"><span>Uncheck this step? This removes ' + (rec.by ? esc(rec.by) + '\'s check-off' : 'the check-off') + ' from ' + esc(rec.at) + '.</span>' +
           '<button class="btn" type="button" id="pUncheckCancel">Cancel</button><button class="btn danger" type="button" id="pUncheck">Yes, uncheck</button></div>'
         : '<button class="btn" type="button" id="pUncheck">Uncheck</button>')
     : waiting.length ? '<button class="btn primary" type="button" disabled>Check off</button>'
-    : '<input id="pInitials" class="initials" type="text" maxlength="4" autocomplete="off" placeholder="Initials" aria-label="Your initials">' +
-      '<button class="btn primary" type="button" id="pCheck">Check off</button><p class="err" id="pErr" role="alert"></p>';
+    : '<button class="btn primary" type="button" id="pCheck">Check off</button>';
 }
 
 /* Parts that update as fields are typed in */
@@ -1259,12 +1442,19 @@ function toHTML(text){
     str = str.replace(/\[([^\]]+)\]\(([^)]*)\)/g, function(m, label, url){
       return url.indexOf(M1) >= 0 ? label + ' ' + miss(url) : '<a href="' + url + '" target="_blank" rel="noopener">' + label + '</a>';
     });
+    str = str.replace(/`([^`]+)`/g, '<code class="val">$1</code><button type="button" class="copyval">Copy</button>');
     str = str.replace(/\*\*(.+?)\*\*/g, '<b>$1</b>');
     str = str.replace(/!!(.+?)!!/g, '<span class="warn">$1</span>');
     return miss(str);
   };
-  var out = '', list = false;
+  var out = '', list = false, block = null, blockLabel = '';
   t.split('\n').forEach(function(line){
+    if (/^```/.test(line.trim())){
+      if (block === null){ if (list){ out += '</ul>'; list = false; } block = []; blockLabel = line.trim().slice(3).trim() || 'Copy'; }
+      else { out += '<div class="codeblock"><pre>' + miss(block.join('\n')) + '</pre><button type="button" class="copyval">' + blockLabel + '</button></div>'; block = null; }
+      return;
+    }
+    if (block !== null){ block.push(line); return; }
     if (/^- /.test(line)){ if (!list){ out += '<ul>'; list = true; } out += '<li>' + inline(line.slice(2)) + '</li>'; return; }
     if (list){ out += '</ul>'; list = false; }
     out += line.trim() ? '<div>' + inline(line) + '</div>' : '<div><br></div>';
@@ -1332,9 +1522,7 @@ $('pBody').addEventListener('input', function(e){
 $('pFoot').addEventListener('click', function(e){
   var s = state();
   if (e.target.id === 'pCheck'){
-    var ini = ($('pInitials').value || '').trim().toUpperCase();
-    if (!/^[A-Z]{2,4}$/.test(ini)){ $('pErr').textContent = 'Enter your initials to check this off.'; $('pInitials').focus(); return; }
-    s[openId] = { by: ini, at: new Date().toLocaleDateString(undefined, { month: 'short', day: 'numeric' }) };
+    s[openId] = { by: '', at: new Date().toLocaleDateString(undefined, { month: 'short', day: 'numeric' }) };
     save(); render(); renderPanel();
   } else if (e.target.id === 'pUncheckCancel'){
     confirmUncheck = false; renderPanel();
@@ -1343,8 +1531,14 @@ $('pFoot').addEventListener('click', function(e){
     delete s[openId]; confirmUncheck = false; save(); render(); renderPanel();
   }
 });
-$('pFoot').addEventListener('keydown', function(e){ if (e.key === 'Enter' && e.target.id === 'pInitials'){ e.preventDefault(); $('pCheck').click(); } });
 $('pBody').addEventListener('click', function(e){
+  if (e.target.classList && e.target.classList.contains('copyval')){
+    var b = e.target, v = b.previousElementSibling.textContent;
+    (navigator.clipboard ? navigator.clipboard.writeText(v) : Promise.reject()).then(function(){
+      var was = b.textContent; b.textContent = 'Copied ✓'; setTimeout(function(){ b.textContent = was; }, 1400);
+    }).catch(function(){ var r = document.createRange(); r.selectNodeContents(b.previousElementSibling); var sel = getSelection(); sel.removeAllRanges(); sel.addRange(r); });
+    return;
+  }
   var ch = e.target.closest && e.target.closest('button[data-choice]');
   if (ch){
     var key = ch.getAttribute('data-choice'), v = ch.getAttribute('data-val');
@@ -1395,6 +1589,24 @@ $('copyLink').addEventListener('click', function(){
 });
 function alertHome(msg){ $('homeList').innerHTML = '<div class="home-empty">' + esc(msg) + '</div>'; }
 
+/* Delete a client: click Delete, then confirm */
+$('homeList').addEventListener('click', function(e){
+  var row = e.target.closest && e.target.closest('.home-row'); if (!row) return;
+  var id = row.getAttribute('data-id'), name = row.getAttribute('data-name');
+  if (e.target.classList.contains('home-del')){
+    e.target.outerHTML = '<div class="home-confirm" role="alert"><span>Delete ' + esc(name) + ' and all its progress? This can\'t be undone.</span>' +
+      '<button type="button" class="btn" data-act="cancel">Cancel</button><button type="button" class="btn danger" data-act="delete">Yes, delete</button></div>';
+    row.querySelector('[data-act="cancel"]').focus();
+  } else if (e.target.getAttribute('data-act') === 'cancel'){
+    row.querySelector('.home-confirm').outerHTML = '<button type="button" class="home-del" aria-label="Delete ' + esc(name) + '">Delete</button>';
+    row.querySelector('.home-del').focus();
+  } else if (e.target.getAttribute('data-act') === 'delete'){
+    e.target.disabled = true; e.target.textContent = 'Deleting…';
+    fetch(API + '?id=' + encodeURIComponent(id), { method: 'DELETE' })
+      .then(function(r){ if (!r.ok) throw new Error(); row.remove(); if (!$('homeList').querySelector('.home-row')) alertHome('No clients yet. Click "+ New client" to start one.'); })
+      .catch(function(){ e.target.disabled = false; e.target.textContent = 'Yes, delete'; alert('Couldn\'t delete. Check your connection and try again.'); });
+  }
+});
 function bootHome(){
   document.body.classList.add('home');
   $('clientTitle').textContent = 'All clients';
@@ -1405,10 +1617,11 @@ function bootHome(){
       list.sort(function(a, b){ return (b.updated || b.created || 0) - (a.updated || a.created || 0); });
       $('homeList').innerHTML = list.map(function(c){
         var s = c.summary || {}, pct = s.total ? Math.round(100 * s.done / s.total) : 0;
-        return '<a class="home-item" href="' + esc(clientURL(c.id)) + '">' +
+        return '<div class="home-row" data-id="' + esc(c.id) + '" data-name="' + esc(c.name) + '"><a class="home-item" href="' + esc(clientURL(c.id)) + '">' +
           '<span class="home-name">' + esc(c.name) + '</span>' +
           '<span class="home-meta">' + esc(s.status || 'Not started') + (s.total ? ' · ' + s.done + ' of ' + s.total : '') + '</span>' +
-          '<span class="home-bar" aria-hidden="true"><span style="width:' + pct + '%"></span></span></a>';
+          '<span class="home-bar" aria-hidden="true"><span style="width:' + pct + '%"></span></span></a>' +
+          '<button type="button" class="home-del" aria-label="Delete ' + esc(c.name) + '">Delete</button></div>';
       }).join('');
     })
     .catch(function(){ alertHome('Couldn\'t load clients. Check your connection and refresh.'); });
