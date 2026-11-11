@@ -229,6 +229,14 @@
   .psteps .codeblock{position:relative;margin:6px 0 4px;background:#fff;border:1px solid #C9CED8;border-radius:8px}
   .psteps .codeblock pre{margin:0;padding:12px 14px 44px;font-family:var(--mono);font-size:12.5px;line-height:19px;white-space:pre-wrap;word-break:break-word;max-height:260px;overflow:auto}
   .psteps .codeblock .copyval{position:absolute;right:10px;bottom:10px;margin:0;background:#fff;font-size:13px;padding:2px 10px}
+  .pf-links{grid-column:1 / -1;display:flex;flex-direction:column;gap:8px}
+  .pf-links .lhint{font-size:12px;color:var(--muted);font-weight:400;margin-top:-4px}
+  .lrow{display:flex;gap:8px;align-items:center}
+  .lrow input{height:44px;border:1px solid #C9CED8;border-radius:8px;padding:0 12px;font:inherit;font-size:14px;background:#fff;color:var(--ink);min-width:0}
+  .lrow input[data-lp="name"]{flex:0 0 34%}
+  .lrow input[data-lp="url"]{flex:1}
+  .lrow .btn{flex:none;display:inline-flex;align-items:center;text-decoration:none}
+  .pf-links .ladd{align-self:flex-start}
   .psteps .miss{background:#FFF1C2;border-radius:3px;padding:0 2px}
   .ptip{margin:0;font-size:14px;line-height:21px;color:var(--ink)}
   .plinks{display:flex;flex-wrap:wrap;gap:8px}
@@ -313,6 +321,7 @@
 </style>
 </head>
 <body>
+<div style="background:#16181D;color:#fff;font:500 13px/1.4 system-ui;padding:10px 16px;text-align:center">Preview only. Changes here aren't saved anywhere. B1 is already set to "We're buying one" for calvary-law.com.</div>
 <div class="wrap">
 
   <header class="top">
@@ -363,6 +372,29 @@
   <div class="p-foot" id="pFoot"></div>
 </dialog>
 
+<script>
+/* PREVIEW ONLY: fake server kept in memory, so this file works without the website */
+(function(){
+  var db = { 'calvary-preview': { id: 'calvary-preview', name: 'Calvary International Law', created: Date.now(), updated: Date.now(), checks: {}, info: { opt_domain: 'buy', domain: 'calvary-law.com', firmName: 'Calvary International Law' }, summary: null },
+    'reyes-test': { id: 'reyes-test', name: 'Test client (delete me)', created: 1, updated: 1, checks: {}, info: {}, summary: { done: 2, total: 33, status: 'In progress' } } };
+  function merge(t, p){ var o = Object.assign({}, t || {}); Object.keys(p || {}).forEach(function(k){ if (p[k] === null) delete o[k]; else o[k] = p[k]; }); return o; }
+  function reply(o, code){ return Promise.resolve(new Response(JSON.stringify(o), { status: code || 200, headers: { 'Content-Type': 'application/json' } })); }
+  var real = window.fetch;
+  window.fetch = function(url, opt){
+    if (String(url).indexOf('/api/onboarding') !== 0) return real.apply(this, arguments);
+    var q = new URLSearchParams(String(url).split('?')[1] || ''), method = (opt && opt.method) || 'GET';
+    if (method === 'GET'){
+      if (q.get('id')) return db[q.get('id')] ? reply(JSON.parse(JSON.stringify(db[q.get('id')]))) : reply({}, 404);
+      return reply(Object.keys(db).map(function(k){ var r = db[k]; return { id: k, name: r.name, created: r.created, updated: r.updated, summary: r.summary }; }));
+    }
+    if (method === 'DELETE'){ delete db[q.get('id')]; return reply({ ok: true }); }
+    var b = JSON.parse(opt.body);
+    if (b.create){ db[b.id] = { id: b.id, name: b.name, created: Date.now(), updated: Date.now(), checks: {}, info: {}, summary: null }; return reply(db[b.id]); }
+    var r = db[b.id]; r.checks = merge(r.checks, b.patch.checks); r.info = merge(r.info, b.patch.info); r.summary = b.summary; r.updated = Date.now();
+    return reply(JSON.parse(JSON.stringify(r)));
+  };
+})();
+</script>
 <script>
 /* ---------- EDIT YOUR CHECKLIST HERE ----------
    Each category is one left-to-right row.
@@ -444,6 +476,7 @@ var FIELDS = {
   adsCustomerId:  { label: 'Google Ads customer ID', placeholder: '123-456-7890' },
   intakeFormLink: { label: 'Call intake form link', type: 'url' },
   previewUrl:     { label: 'Preview link', type: 'url' },
+  previewLinks:   { label: 'Links to send the client', type: 'links' },
   approvedOn:     { label: 'Client approved on', type: 'date' },
   domain:         { label: 'Domain', placeholder: 'example.com' },
   registrar:      { label: 'Registered at', type: 'select', options: ['GoDaddy', 'Squarespace / Google Domains', 'Namecheap', 'Cloudflare', 'Other / not sure'] },
@@ -607,8 +640,8 @@ var HELP = {
                   '- The client only sees their firm name and the onboarding questions, nothing else',
                   '- Lost the link? Go back to the firm\'s tab and click **Copy Client Link** again. It\'s always the same link'
                 ] },
-  review:     { client: ['Approve the pages'], fields: ['approvedOn'],
-                email: { subject: 'Your new pages are ready to review', body: 'Hi {contactName},\n\nGood news: [your new pages are ready to review]({previewUrl})!\n\nTake a look and reply with any changes, big or small. If everything looks good, just reply **"Approved"** and we\'ll get them live.\n\nThanks!' } },
+  review:     { client: ['Approve the pages'], fields: ['approvedOn'], top: ['previewLinks'],
+                email: { subject: 'Your new pages are ready to review', body: 'Hi {contactName},\n\nGood news: your new pages are ready to review!\n\n{previewList}\n\nTake a look and reply with any changes, big or small. If everything looks good, just reply **"Approved"** and we\'ll get them live.\n\nThanks!' } },
 
   domain:        function(o){ var h = domainHelp(o); h.choice = 'domain'; return h; },
   cfSettings:    { top: ['domain'], links: [['Cloudflare', 'https://dash.cloudflare.com']], steps: [
@@ -738,7 +771,7 @@ var HELP = {
                      '- **git commit** says "Please tell me who you are"? Run `git config --global user.name "Aurelian"` and `git config --global user.email "you@aureliantech.co"` (your real email), then paste the GitHub block again',
                      '- Permission error on npm? Run `sudo npm install -g vercel` and enter your Mac password'
                    ] },
-  build:         { fields: ['previewUrl'] },
+  build:         { fields: ['previewLinks'] },
   siteIntakeNum: { steps: [
                    '- Put **{intakeNumber}** on every call button and visible number',
                    '- Use the same number format everywhere, as text (no images)',
@@ -957,9 +990,23 @@ function registrarSteps(){
     '- Add **{accessEmail}** as a user (sometimes called a delegate or domain manager) with access to DNS settings',
     '- Not sure where it\'s registered, or don\'t see that option? Just let me know and I\'ll help'];
 }
+/* Review links: one for a whole website, or one per landing page. Stored as [{name, url}] */
+function getLinks(){
+  var inf = info(), l = inf.previewLinks;
+  if (!Array.isArray(l) || !l.length) l = inf.previewUrl ? [{ name: '', url: inf.previewUrl }] : [{ name: '', url: '' }];
+  return l;
+}
+function filledLinks(){ return getLinks().filter(function(x){ return (x.url || '').trim(); }); }
+function previewList(){
+  var l = filledLinks();
+  if (!l.length) return ['{previewLinks}'];
+  if (l.length === 1 && !(l[0].name || '').trim()) return ['[Review your new pages here](' + l[0].url.trim() + ')'];
+  return l.map(function(x){ var u = x.url.trim(), n = (x.name || '').trim(); return '- [' + (n || u).replace(/[\[\]]/g, '') + '](' + u + ')'; });
+}
 function prep(text){
   var n = 0;
   text = text.split('\n').map(function(line){
+    if (line.trim() === '{previewList}') return previewList().join('\n');
     var m = line.match(/^(\[\[\w+\]\])?\{registrarSteps\}$/);
     return m ? registrarSteps().map(function(x){ return (m[1] || '') + x; }).join('\n') : line;
   }).join('\n');
@@ -998,7 +1045,7 @@ CHECKLIST.forEach(function(cat){
 
 /* ---------- Saving: each client is one shared record on the server (/api/onboarding) ---------- */
 var API = '/api/onboarding';
-var CLIENT_ID = new URLSearchParams(location.search).get('client');
+var CLIENT_ID = new URLSearchParams(location.search).get('client') || (location.href.indexOf('?') < 0 ? 'calvary-preview' : null);
 var VIEW_KEY = 'onboardingChecklist.view';
 var data = { current: '', clients: {}, info: {}, view: (function(){ try { return localStorage.getItem(VIEW_KEY) || 'list'; } catch(e){ return 'list'; } })() };
 var synced = { checks: {}, info: {} };   /* what the server last confirmed */
@@ -1301,6 +1348,7 @@ function fmt(key, val){
 function val(k){
   var inf = info();
   if (tok(k) != null) return tok(k);
+  if (k === 'previewLinks') return filledLinks().length ? filledLinks().length + ' link' + (filledLinks().length > 1 ? 's' : '') : '';
   if (k === 'repoName'){ var dm = (inf.domain || '').trim().toLowerCase(); return dm ? dm.replace(/[^a-z0-9]+/g, '-') : ''; }
   if (k === 'emailDomain'){ var m = (inf.contactEmail || '').trim().match(/@(.+)$/); return m ? m[1].toLowerCase() : ''; }
   if (k === 'firmName' && !(inf.firmName || '').trim()) return data.current === 'New client' ? '' : data.current;
@@ -1321,7 +1369,23 @@ function copyText(text, btn){
   function fallback(){ var ta = document.createElement('textarea'); ta.value = text; document.body.appendChild(ta); ta.select(); try { document.execCommand('copy'); done(); } catch(e){} ta.remove(); }
 }
 function fieldHTML(key){
-  var f = FIELDS[key], v = info()[key] || (key === 'firmName' ? val(key) : '');
+  var f = FIELDS[key];
+  if (f.type === 'links'){
+    var l = getLinks();
+    return '<div class="pf pf-links" id="f_' + key + '"><span>' + esc(f.label) + '</span>' +
+      '<small class="lhint">One link for a whole website, or one per landing page.</small>' +
+      l.map(function(x, i){
+        var u = (x.url || '').trim();
+        return '<div class="lrow">' +
+          '<input type="text" data-lk="' + i + '" data-lp="name" value="' + esc(x.name || '') + '" placeholder="Page name (optional)" aria-label="Page name ' + (i + 1) + '" autocomplete="off">' +
+          '<input type="url" data-lk="' + i + '" data-lp="url" value="' + esc(x.url || '') + '" placeholder="https://…" aria-label="Link ' + (i + 1) + '" autocomplete="off">' +
+          (u ? '<a class="btn" href="' + esc(u) + '" target="_blank" rel="noopener">Open ↗</a>' : '') +
+          (l.length > 1 ? '<button type="button" class="btn lremove" data-lrm="' + i + '" aria-label="Remove link ' + (i + 1) + '">Remove</button>' : '') +
+        '</div>';
+      }).join('') +
+      '<button type="button" class="btn ladd" data-ladd="1">+ Add another link</button></div>';
+  }
+  var v = info()[key] || (key === 'firmName' ? val(key) : '');
   if (f.type === 'select') return '<label class="pf"><span>' + esc(f.label) + '</span><select id="f_' + key + '" data-field="' + key + '">' +
     '<option value="">Choose…</option>' + f.options.map(function(o){ return '<option' + (o === v ? ' selected' : '') + '>' + esc(o) + '</option>'; }).join('') + '</select></label>';
   var input = '<input id="f_' + key + '" data-field="' + key + '" type="' + (f.type || 'text') + '" value="' + esc(v) + '" placeholder="' + esc(f.placeholder || '') + '" autocomplete="off">';
@@ -1515,6 +1579,12 @@ $('rows').addEventListener('change', function(e){
 });
 $('pBody').addEventListener('input', function(e){
   if (e.target.id === 'tplSubj' || e.target.id === 'tplBody'){ tplDirty = true; $('tplReset').hidden = false; return; }
+  var li = e.target.getAttribute('data-lk');
+  if (li != null){
+    var l = JSON.parse(JSON.stringify(getLinks()));
+    l[+li][e.target.getAttribute('data-lp')] = e.target.value;
+    info().previewLinks = l; save(); renderLive(); return;
+  }
   var k = e.target.getAttribute('data-field'); if (!k) return;
   info()[k] = e.target.value; save(); renderLive();
   if (k.indexOf('note_') === 0 || k === 'launchTarget') render();
@@ -1532,6 +1602,15 @@ $('pFoot').addEventListener('click', function(e){
   }
 });
 $('pBody').addEventListener('click', function(e){
+  if (e.target.getAttribute && (e.target.hasAttribute('data-ladd') || e.target.hasAttribute('data-lrm'))){
+    var l = JSON.parse(JSON.stringify(getLinks())), focusI;
+    if (e.target.hasAttribute('data-ladd')){ l.push({ name: '', url: '' }); focusI = l.length - 1; }
+    else { l.splice(+e.target.getAttribute('data-lrm'), 1); focusI = Math.max(0, +e.target.getAttribute('data-lrm') - 1); }
+    info().previewLinks = l; save();
+    var keep = $('pBody').scrollTop; renderPanel(); $('pBody').scrollTop = keep;
+    var f = document.querySelector('[data-lk="' + focusI + '"][data-lp="name"]'); if (f) f.focus();
+    return;
+  }
   if (e.target.classList && e.target.classList.contains('copyval')){
     var b = e.target, v = b.previousElementSibling.textContent;
     (navigator.clipboard ? navigator.clipboard.writeText(v) : Promise.reject()).then(function(){
