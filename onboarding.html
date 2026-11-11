@@ -321,7 +321,6 @@
 </style>
 </head>
 <body>
-<div style="background:#16181D;color:#fff;font:500 13px/1.4 system-ui;padding:10px 16px;text-align:center">Preview only. Changes here aren't saved anywhere. B1 is already set to "We're buying one" for calvary-law.com.</div>
 <div class="wrap">
 
   <header class="top">
@@ -372,29 +371,6 @@
   <div class="p-foot" id="pFoot"></div>
 </dialog>
 
-<script>
-/* PREVIEW ONLY: fake server kept in memory, so this file works without the website */
-(function(){
-  var db = { 'calvary-preview': { id: 'calvary-preview', name: 'Calvary International Law', created: Date.now(), updated: Date.now(), checks: {}, info: { opt_domain: 'buy', domain: 'calvary-law.com', firmName: 'Calvary International Law' }, summary: null },
-    'reyes-test': { id: 'reyes-test', name: 'Test client (delete me)', created: 1, updated: 1, checks: {}, info: {}, summary: { done: 2, total: 33, status: 'In progress' } } };
-  function merge(t, p){ var o = Object.assign({}, t || {}); Object.keys(p || {}).forEach(function(k){ if (p[k] === null) delete o[k]; else o[k] = p[k]; }); return o; }
-  function reply(o, code){ return Promise.resolve(new Response(JSON.stringify(o), { status: code || 200, headers: { 'Content-Type': 'application/json' } })); }
-  var real = window.fetch;
-  window.fetch = function(url, opt){
-    if (String(url).indexOf('/api/onboarding') !== 0) return real.apply(this, arguments);
-    var q = new URLSearchParams(String(url).split('?')[1] || ''), method = (opt && opt.method) || 'GET';
-    if (method === 'GET'){
-      if (q.get('id')) return db[q.get('id')] ? reply(JSON.parse(JSON.stringify(db[q.get('id')]))) : reply({}, 404);
-      return reply(Object.keys(db).map(function(k){ var r = db[k]; return { id: k, name: r.name, created: r.created, updated: r.updated, summary: r.summary }; }));
-    }
-    if (method === 'DELETE'){ delete db[q.get('id')]; return reply({ ok: true }); }
-    var b = JSON.parse(opt.body);
-    if (b.create){ db[b.id] = { id: b.id, name: b.name, created: Date.now(), updated: Date.now(), checks: {}, info: {}, summary: null }; return reply(db[b.id]); }
-    var r = db[b.id]; r.checks = merge(r.checks, b.patch.checks); r.info = merge(r.info, b.patch.info); r.summary = b.summary; r.updated = Date.now();
-    return reply(JSON.parse(JSON.stringify(r)));
-  };
-})();
-</script>
 <script>
 /* ---------- EDIT YOUR CHECKLIST HERE ----------
    Each category is one left-to-right row.
@@ -1045,7 +1021,7 @@ CHECKLIST.forEach(function(cat){
 
 /* ---------- Saving: each client is one shared record on the server (/api/onboarding) ---------- */
 var API = '/api/onboarding';
-var CLIENT_ID = new URLSearchParams(location.search).get('client') || (location.href.indexOf('?') < 0 ? 'calvary-preview' : null);
+var CLIENT_ID = new URLSearchParams(location.search).get('client');
 var VIEW_KEY = 'onboardingChecklist.view';
 var data = { current: '', clients: {}, info: {}, view: (function(){ try { return localStorage.getItem(VIEW_KEY) || 'list'; } catch(e){ return 'list'; } })() };
 var synced = { checks: {}, info: {} };   /* what the server last confirmed */
