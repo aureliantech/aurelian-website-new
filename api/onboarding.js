@@ -8,7 +8,7 @@
 //   POST   { id, patch, summary }     -> save changes (merged, so two people editing at once don't erase each other)
 //   DELETE /api/onboarding?id=...     -> delete a client
 
-import { put, get, list, del } from '@vercel/blob';
+import { put, get, head, list, del } from '@vercel/blob';
 
 const PREFIX = 'onboarding/';
 const pathOf = (id) => `${PREFIX}${id}.json`;
@@ -85,8 +85,9 @@ export default async function handler(req, res) {
         return res.status(200).json(rec);
       }
 
-      // Read, merge, write. If someone else saved in between, try again with their version.
-      for (let attempt = 0; attempt < 5; attempt++) {
+      // Read, merge, write. Try a few times to avoid overwriting someone who saved at the
+      // same moment; if the storage keeps refusing, save anyway (the merge keeps other keys).
+      for (let attempt = 0; attempt < 4; attempt++) {
         const found = await read(id);
         if (!found) return res.status(404).json({ error: 'Not found' });
         const rec = found.rec;
@@ -94,11 +95,17 @@ export default async function handler(req, res) {
         rec.info = merge(rec.info, patch && patch.info);
         if (summary) rec.summary = summary;
         rec.updated = Date.now();
+        const last = attempt === 3;
+        let etag = null;
+        if (!last) { try { const h = await head(pathOf(id)); etag = h && h.etag; } catch (e) { etag = null; } }
         try {
-          await write(id, rec, { ifMatch: found.etag });
+          await write(id, rec, etag ? { ifMatch: etag } : {});
           return res.status(200).json(rec);
         } catch (e) {
-          if (e && /precondition/i.test(e.name + e.message)) continue;
+          if (!last && e && /precondition/i.test(e.name + e.message)) {
+            await new Promise((r) => setTimeout(r, 150 * (attempt + 1)));
+            continue;
+          }
           throw e;
         }
       }
